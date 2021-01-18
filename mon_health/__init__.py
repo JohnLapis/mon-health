@@ -15,14 +15,19 @@ def teardown():
 
 
 def parse_command(command):
-    return re.match(r"(?P<a>\w+) *(?P<args>.*)?", command).groups()
+    match = re.match(r"(?P<a>\w+) *(?P<args>.*)?", command)
+    if match is None:
+        raise SyntaxError
+    return match.groups()
 
 
 def run_command(command):
-    # args should come parsed already
-    name, args = parse_command(command)
     try:
+        # args should come parsed already
+        name, args = parse_command(command)
         for output in get_command(name).execute(args):
             print(output)
     except CommandNotFound:
         print(f"Command '{name}' does not exist.")
+    except SyntaxError:
+        print(f"A command should be composed of lower-case letters.")
