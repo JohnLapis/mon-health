@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from peewee import *
+from peewee import DateField, Model, SqliteDatabase, TextField, TimeField
 
 db = SqliteDatabase("health.db")
 
