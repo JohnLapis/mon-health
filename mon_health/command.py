@@ -16,6 +16,10 @@ def parse_date(string):
         raise InvalidDate
 
 
+def format_time(date):
+    return f"{date.hour}:{date.minute}"
+
+
 class InvalidDate(Exception):
     pass
 
@@ -65,6 +69,16 @@ class InsertCommand(Command):
 
 class FindCommand(Command):
     description = "Finds entry into database."
+
+    @staticmethod
+    def execute(*args):
+        date = parse_date(args[0])
+        output = []
+        query = Food.select().where(Food.date == date).order_by(Food.date)
+        for food in query:
+            output.append(f"{format_time(food.time)}  {food.name}")
+
+        return output
 
 
 class UpdateCommand(Command):
