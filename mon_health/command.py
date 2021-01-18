@@ -60,6 +60,11 @@ class DeleteCommand(Command):
 class ExitCommand(Command):
     description = "Exits shell."
 
+    @staticmethod
+    def execute(*args):
+        return []
+
+
 
 def setup_commands(db, command_table=None):
     global DB, COMMAND_TABLE
