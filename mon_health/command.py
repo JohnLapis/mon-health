@@ -97,8 +97,8 @@ class ExitCommand(Command):
         return []
 
 
-def setup_commands(db, command_table=None):
-    global DB, Food, COMMAND_TABLE
+def setup_commands(db, command_table=None, alias_table=None):
+    global DB, Food, COMMAND_TABLE, ALIAS_TABLE
 
     DB = db
     Food = db.Food
@@ -114,12 +114,24 @@ def setup_commands(db, command_table=None):
         }
     else:
         COMMAND_TABLE = command_table
+    if alias_table is None:
+        ALIAS_TABLE = {
+            "h": "help",
+            "i": "insert",
+            "f": "find",
+            "u": "update",
+            "d": "delete",
+        }
+    else:
+        ALIAS_TABLE = alias_table
 
 
 def get_command(name):
     try:
-        return COMMAND_TABLE[name]
-    except KeyError:
+        command = COMMAND_TABLE.get(name) or COMMAND_TABLE.get(ALIAS_TABLE.get(name))
+        assert command is not None
+        return command
+    except AssertionError:
         raise CommandNotFound
 
 
