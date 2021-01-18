@@ -1,7 +1,9 @@
-from peewee import *
 from datetime import datetime
 
-db = SqliteDatabase('health.db')
+from peewee import *
+
+db = SqliteDatabase("health.db")
+
 
 def current_time():
     return datetime.now().time()
@@ -23,7 +25,8 @@ class Food(BaseModel):
 
 
 def get_db():
-    return db.connect('health.db')
+    return db.connect("health.db")
+
 
 def init_db():
     db.create_tables([Food])
