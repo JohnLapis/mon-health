@@ -17,7 +17,6 @@ def parse_command(command):
 
 def run_command(command):
     try:
-        # args should come parsed already
         name, args = parse_command(command)
         for output in get_command(name).execute(args):
             print(output)
