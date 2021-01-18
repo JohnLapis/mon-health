@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from peewee import DateField, Model, SqliteDatabase, TextField, TimeField
+from peewee import DateField, Model, SqliteDatabase, CharField, TimeField
 
 db = SqliteDatabase("health.db")
 
@@ -19,7 +19,7 @@ class BaseModel(Model):
 
 
 class Food(BaseModel):
-    name = TextField()
+    name = CharField(max_length=20)
     time = TimeField(default=current_time)
     date = DateField(default=current_date)
 
