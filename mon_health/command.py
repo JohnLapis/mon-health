@@ -83,11 +83,11 @@ class ExitCommand(Command):
         return []
 
 
-
 def setup_commands(db, command_table=None):
-    global DB, COMMAND_TABLE
+    global DB, Food, COMMAND_TABLE
 
     DB = db
+    Food = db.Food
 
     if command_table is None:
         COMMAND_TABLE = {
