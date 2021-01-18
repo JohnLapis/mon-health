@@ -5,13 +5,7 @@ from .command import CommandNotFound, get_command, setup_commands
 
 
 def setup():
-    # db = db.get_db()
-    # setup_commands(db)
-    setup_commands(["oi"])
-
-
-def teardown():
-    db.close()
+    setup_commands(db)
 
 
 def parse_command(command):

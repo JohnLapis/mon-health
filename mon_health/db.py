@@ -24,9 +24,5 @@ class Food(BaseModel):
     date = DateField(default=current_date)
 
 
-def get_db():
-    return db.connect("health.db")
-
-
 def init_db():
     db.create_tables([Food])
