@@ -1,5 +1,23 @@
+from datetime import datetime
+
 DB = None
 COMMAND_TABLE = {}
+
+
+def parse_date(string):
+    try:
+        date_params = string.split("/")
+        assert 1 <= len(date_params) <= 3
+        year = datetime.now().year if len(date_params) < 3 else date_params[2]
+        month = datetime.now().month if len(date_params) < 2 else date_params[1]
+        day = date_params[0]
+        return datetime(day=int(day), month=int(month), year=int(year))
+    except (ValueError, AssertionError):
+        raise InvalidDate
+
+
+class InvalidDate(Exception):
+    pass
 
 
 class CommandNotFound(Exception):
