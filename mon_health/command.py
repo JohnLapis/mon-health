@@ -206,7 +206,7 @@ def run_command(input):
     except AliasNotFound:
         print(f"Alias '{name}' does not exist.")
     except InvalidCommand:
-        print("A command should be composed of lower-case letters.")
+        print("Invalid command.")
 
     for output in command.execute(args):
         print(output)
