@@ -198,6 +198,7 @@ def setup_commands(db, command_table=None, alias_table=None):
             "u": "update",
             "d": "delete",
             "today": "find today",
+            "last": "find today limit",
         }
     else:
         ALIAS_TABLE = alias_table
