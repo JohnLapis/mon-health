@@ -1,5 +1,6 @@
 import re
-from datetime import datetime
+from datetime import datetime, time
+from functools import reduce
 
 DB = None
 COMMAND_TABLE = {}
@@ -17,8 +18,23 @@ def parse_date(string):
         raise InvalidDate
 
 
+def parse_time(string):
+    try:
+        time_params = string.split(":")
+        assert 1 <= len(time_params) <= 2
+        minute = 0 if len(time_params) == 1 else time_params[1]
+        hour = time_params[0]
+        return time(hour=int(hour), minute=int(minute))
+    except (ValueError, AssertionError):
+        raise InvalidDate
+
+
 def format_time(date):
-    return f"{date.hour}:{date.minute}"
+    return date.strftime("%H:%M")
+
+
+class InvalidTime(Exception):
+    pass
 
 
 class InvalidDate(Exception):
@@ -76,15 +92,55 @@ class FindCommand(Command):
     description = "Finds entry into database."
 
     @staticmethod
-    def execute(*args):
-        if args[0] == "today":
-            date = datetime.now().date()
-        else:
-            date = parse_date(args[0])
+    def execute(args):
+        def match_args(pattern):
+            return re.match(pattern, args, re.IGNORECASE)
+
+        try:
+            q = Food.select()
+            filters = []
+
+            match = match_args(r"today *")
+            if match:
+                filters.append(Food.date == datetime.now().date())
+                args = args[match.end() :]
+            else:
+                match = match_args(r"(\S+) *")
+                if match and ":" not in match.group() and "h" not in match.group():
+                    filters.append(Food.date == parse_date(match.groups()[0]))
+                    args = args[match.end() :]
+
+            match = match_args(r"(\d+:\d+) *")
+            if match:
+                filters.append(Food.time == parse_time(match.groups()[0]))
+                args = args[match.end() :]
+            else:
+                match = match_args(r"(\S+)h *")
+                if match:
+                    hour = match.groups()[0]
+                    low = parse_time(hour + ":00")
+                    high = parse_time(hour + ":59")
+                    filters.append(Food.time.between(low, high))
+                    args = args[match.end() :]
+
+            q = q.where(reduce(lambda a, b: a & b, filters))
+
+            match = match_args(r"order +by +(\w+)\b *")
+            if match:
+                q = q.order_by(getattr(Food, match.groups()[0]))
+                args = args[match.end() :]
+            else:
+                q = q.order_by(Food.date)
+        except IndexError:
+            raise "algo"
+
+        match = match_args(r"limit +(\d+)\b *")
+        if match:
+            q = q.limit(match.groups()[0])
+
         output = []
-        query = Food.select().where(Food.date == date).order_by(Food.date)
-        output.append("ID  NAME  TIME")
-        for food in query:
+        output.append("ID  TIME  NAME")
+        for food in q:
             output.append(f"{food.id}  {format_time(food.time)}  {food.name}")
 
         return output
