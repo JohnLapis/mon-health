@@ -87,6 +87,14 @@ class HelpCommand(Command):
 class InsertCommand(Command):
     description = "Inserts entry into database."
 
+    @staticmethod
+    def execute(args):
+        Food.insert_many(
+            [{"name": name.strip()} for name in args.split(",")]
+        ).execute()
+
+        return []
+
 
 class FindCommand(Command):
     description = "Finds entry into database."
