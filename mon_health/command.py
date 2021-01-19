@@ -19,6 +19,10 @@ class CommandNotFound(Exception):
     pass
 
 
+class InvalidArgs(Exception):
+    pass
+
+
 class Command:
     # def __init__(self, description):
     #     self.description = description
@@ -58,9 +62,16 @@ class InsertCommand(Command):
     description = "Inserts entry into database."
 
     @staticmethod
+    def parse_args(args):
+        try:
+            return [arg.strip() for arg in args.split(",")]
+        except Exception:
+            raise InvalidArgs
+
+    @staticmethod
     def execute(args):
         Food.insert_many(
-            [{"name": name.strip()} for name in args.split(",")]
+            [{"name": name} for name in InsertCommand.parse_args(args)]
         ).execute()
 
         return []
