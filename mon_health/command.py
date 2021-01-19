@@ -1,8 +1,5 @@
-import re
-from datetime import datetime
-from functools import reduce
 
-
+from .food_parser import FoodParser
 from .utils import (
     InvalidCommand,
     InvalidDate,
@@ -85,66 +82,14 @@ class FindCommand(Command):
 
     @staticmethod
     def parse_args(args):
-        def match_remaining_input(pattern):
-            return re.match(pattern, remaining_input, re.IGNORECASE)
-
-        def match_date(args, filters):
-            match = match_remaining_input(r"today *")
-            if match:
-                filters.append(Food.date == datetime.now().date())
-                args = args[match.end() :]
-            else:
-                match = match_remaining_input(r"(\d+$|\d+\s|\d+(/\d+)+)\s*")
-                if match and ":" not in match.group() and "h" not in match.group():
-                    filters.append(Food.date == parse_date(match.groups()[0]))
-                    args = args[match.end() :]
-
-            return args, filters
-
-        def match_time(args, filters):
-            match = match_remaining_input(r"(\d+:\d+) *")
-            if match:
-                filters.append(Food.time == parse_time(match.groups()[0]))
-                args = args[match.end() :]
-            else:
-                match = match_remaining_input(r"(\S+)h *")
-                if match:
-                    hour = match.groups()[0]
-                    low = parse_time(hour + ":00")
-                    high = parse_time(hour + ":59")
-                    filters.append(Food.time.between(low, high))
-                    args = args[match.end() :]
-
-            return args, filters
-
-        def match_sorting(args, query):
-            match = match_remaining_input(r"(?:order +by|sort) +(-?)(\w+)\b *")
-            if match:
-                field = getattr(Food, match.groups()[1])
-                query = query.order_by(field.desc() if match.groups()[0] else field)
-                args = args[match.end() :]
-            else:
-                query = query.order_by(Food.date)
-
-            return args, query
-
-        def match_limit(args, query):
-            match = match_remaining_input(r"limit +(\d+)\b *")
-            if match:
-                query = query.limit(match.groups()[0])
-                args = args[match.end() :]
-
-            return args, query
-
-        remaining_input = args
-
-        filters = []
-        remaining_input, filters = match_date(remaining_input, filters)
-        remaining_input, filters = match_time(remaining_input, filters)
-
-        query = Food.select().where(reduce(lambda a, b: a & b, filters))
-        remaining_input, query = match_sorting(remaining_input, query)
-        remaining_input, query = match_limit(remaining_input, query)
+        parser = FoodParser(args)
+        parser.parse()
+        query = Food.select()
+        if parser.where_clause:
+            query = query.where(parser.where_clause)
+        query = query.order_by(parser.sorting_clause or Food.date)
+        if parser.limit_clause:
+            query = query.limit(parser.limit_clause)
 
         return query
 

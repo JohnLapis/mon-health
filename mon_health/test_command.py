@@ -1,10 +1,12 @@
 import random
+import re
 from datetime import datetime, time
 
 import pytest
 
 from .command import (
     CommandNotFound,
+    FindCommand,
     HelpCommand,
     InsertCommand,
     InvalidArgs,
@@ -16,6 +18,10 @@ from .command import (
 def get_random_string(length):
     letters = "abcdefghijklmnopqrstuvwxyz"
     return "".join(random.choice(letters) for i in range(length))
+
+
+def now():
+    return datetime.now()
 
 
 class TestHelpCommand:
@@ -75,6 +81,65 @@ class TestInsertCommand:
             self.Food.select().where(self.Food.name == random_string).get().id
         )
         assert self.Food.delete_by_id(inserted_id) == 1
+
+
+class TestFindCommand:
+    @classmethod
+    def setup_class(cls):
+        from . import db
+
+        setup_commands(db)
+        cls.Food = db.Food
+
+    @pytest.mark.parametrize(
+        "args,expected",
+        [
+            (
+                "hotdog;",
+                lambda q, Food: q.where(Food.name == "hotdog").order_by(Food.date),
+            ),
+            (
+                "toDAY",
+                lambda q, Food: (
+                    q.where(Food.date == datetime.now().date()).order_by(Food.date)
+                ),
+            ),
+            ("sort date", lambda q, Food: q.order_by(Food.date)),
+            ("order BY -date", lambda q, Food: q.order_by(Food.date.desc())),
+            ("LIMIT 5", lambda q, Food: q.limit("5")),
+            (
+                "1/01 5h    sort  date LImit 1",
+                lambda q, Food: (
+                    q.where(
+                        (Food.date == datetime(day=1, month=1, year=now().year))
+                        & Food.time.between(
+                            time(hour=5, minute=00), time(hour=5, minute=59)
+                        )
+                    )
+                    .order_by(Food.date)
+                    .limit("1")
+                ),
+            ),
+        ],
+    )
+    def test_parse_args_given_valid_args(self, args, expected):
+        received_query = FindCommand.parse_args(args)
+        expected_query = expected(self.Food.select(), self.Food)
+
+        for row1, row2 in zip(received_query, expected_query):
+            assert row1 == row2
+
+    def test_execute_given_valid_args(self):
+        random_string = get_random_string(20)
+        self.Food.insert(name=random_string).execute()
+
+        output = FindCommand.execute(random_string + ";")
+
+        assert len(output) == 2
+        id = re.match(r"\d+", output[1]).group()
+        food = self.Food.get_by_id(id)
+        assert self.Food.delete_by_id(id) == 1
+        assert food.name == random_string
 
 
 class TestUpdateCommand:
