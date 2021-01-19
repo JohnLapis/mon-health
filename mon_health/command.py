@@ -3,10 +3,15 @@ from datetime import datetime, time
 from functools import reduce
 
 
-from .utils import InvalidCommand, format_time, parse_command, parse_date, parse_time
-
-
-
+from .utils import (
+    InvalidCommand,
+    InvalidDate,
+    InvalidTime,
+    format_time,
+    parse_command,
+    parse_date,
+    parse_time,
+)
 
 
 class AliasNotFound(Exception):
@@ -138,11 +143,41 @@ class UpdateCommand(Command):
     description = "Updates entry into database."
 
     @staticmethod
-    def execute(args):
-        id, name = args.split(",")
-        Food.replace(id=id.strip(), name=name.strip()).execute()
+    def parse_args(args):
+        def add_to_parsed_args(key, value):
+            if key in parsed_args:
+                raise InvalidArgs
+            else:
+                parsed_args[key] = value
 
-        return []
+        try:
+            split_args = [arg.strip() for arg in args.split(",")]
+            parsed_args = {"id": split_args.pop(0)}
+            assert split_args
+            for arg in split_args:
+                if "/" in arg:
+                    add_to_parsed_args("date", parse_date(arg))
+                elif ":" in arg:
+                    add_to_parsed_args("time", parse_time(arg))
+                else:
+                    add_to_parsed_args("name", arg)
+
+            return parsed_args
+        except (AssertionError, IndexError, InvalidDate, InvalidTime):
+            raise InvalidArgs
+
+    @staticmethod
+    def execute(args):
+        try:
+            # print(args)
+            # Food.replace(id=args, time=parse_time("16:16")).execute()
+
+            params = UpdateCommand.parse_args(args)
+            Food.replace(**params).execute()
+            return []
+        except IntegrityError:
+            return ["Name field should be given."]
+            # raise e
 
 
 class DeleteCommand(Command):

@@ -1,5 +1,5 @@
-from datetime import datetime
 import random
+from datetime import datetime, time
 
 import pytest
 
@@ -7,6 +7,8 @@ from .command import (
     CommandNotFound,
     HelpCommand,
     InsertCommand,
+    InvalidArgs,
+    UpdateCommand,
     setup_commands,
 )
 
@@ -73,3 +75,81 @@ class TestInsertCommand:
             self.Food.select().where(self.Food.name == random_string).get().id
         )
         assert self.Food.delete_by_id(inserted_id) == 1
+
+
+class TestUpdateCommand:
+    @classmethod
+    def setup_class(cls):
+        from . import db
+
+        setup_commands(db)
+        cls.Food = db.Food
+
+    @pytest.mark.parametrize(
+        "args,expected",
+        [
+            (
+                "1, name, 01/6/55, 1:55",
+                {
+                    "id": "1",
+                    "name": "name",
+                    "date": datetime(day=1, month=6, year=55),
+                    "time": time(hour=1, minute=55),
+                },
+            ),
+            (
+                "1, 01/6/55, name, 1:55",
+                {
+                    "id": "1",
+                    "name": "name",
+                    "date": datetime(day=1, month=6, year=55),
+                    "time": time(hour=1, minute=55),
+                },
+            ),
+            (
+                "1, name, 01/6/55",
+                {
+                    "id": "1",
+                    "name": "name",
+                    "date": datetime(day=1, month=6, year=55),
+                },
+            ),
+            (
+                "1, name, 16:55",
+                {
+                    "id": "1",
+                    "name": "name",
+                    "time": time(hour=16, minute=55),
+                },
+            ),
+            ("1, name", {"id": "1", "name": "name"}),
+        ],
+    )
+    def test_parse_args_given_valid_args(self, args, expected):
+        assert UpdateCommand.parse_args(args) == expected
+
+    @pytest.mark.parametrize(
+        "args",
+        [
+            "1" "1, name, name2",
+            "1, 16:55, 16:55",
+            "1, aa/bb",
+            "1, aa:bb",
+            "1, name, 01/6/55, 1:55, extra",
+        ],
+    )
+    def test_parse_args_given_invalid_args(self, args):
+        with pytest.raises(InvalidArgs):
+            UpdateCommand.parse_args(args)
+
+    def test_execute_args_given_valid_args(self):
+        random_string = get_random_string(20)
+        self.Food.insert(name=random_string).execute()
+        inserted_id = (
+            self.Food.select().where(self.Food.name == random_string).get().id
+        )
+        new_name = "new_string"
+
+        UpdateCommand.execute(f"{inserted_id}, {new_name}")
+
+        assert self.Food.get_by_id(inserted_id).name == new_name
