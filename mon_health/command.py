@@ -25,6 +25,10 @@ class InvalidDate(Exception):
     pass
 
 
+class AliasNotFound(Exception):
+    pass
+
+
 class CommandNotFound(Exception):
     pass
 
@@ -73,11 +77,15 @@ class FindCommand(Command):
 
     @staticmethod
     def execute(*args):
-        date = parse_date(args[0])
+        if args[0] == "today":
+            date = datetime.now().date()
+        else:
+            date = parse_date(args[0])
         output = []
         query = Food.select().where(Food.date == date).order_by(Food.date)
+        output.append("ID  NAME  TIME")
         for food in query:
-            output.append(f"{format_time(food.time)}  {food.name}")
+            output.append(f"{food.id}  {format_time(food.time)}  {food.name}")
 
         return output
 
@@ -122,6 +130,7 @@ def setup_commands(db, command_table=None, alias_table=None):
             "f": "find",
             "u": "update",
             "d": "delete",
+            "today": "find today",
         }
     else:
         ALIAS_TABLE = alias_table
@@ -134,25 +143,45 @@ def parse_command(command):
     return match.groups()
 
 
-def run_command(command):
+def run_command(input):
     try:
-        name, args = parse_command(command)
-        for output in get_command(name)(args):
+        name, args = parse_command(input)
+
+        try:
+            command = get_command(name)
+        except CommandNotFound:
+            input = get_alias(name)
+            name, alias_args = parse_command(input)
+            args = alias_args + args
+            command = get_command(name)
+
+        for output in command.execute(args):
             print(output)
     except CommandNotFound:
         print(f"Command '{name}' does not exist.")
+    except AliasNotFound:
+        print(f"Alias '{name}' does not exist.")
     except SyntaxError:
         print(f"A command should be composed of lower-case letters.")
 
 
+def get_alias(name):
+    try:
+        return ALIAS_TABLE[name]
+    except KeyError:
+        raise AliasNotFound
+
+
 def get_command(name):
     try:
-        command = COMMAND_TABLE.get(name) or COMMAND_TABLE.get(ALIAS_TABLE.get(name))
-        assert command is not None
-        return command
-    except AssertionError:
+        return COMMAND_TABLE[name]
+    except KeyError:
         raise CommandNotFound
 
 
 def get_commands():
     return COMMAND_TABLE.items()
+
+
+def get_aliases():
+    return ALIAS_TABLE.items()
