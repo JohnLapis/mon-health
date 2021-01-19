@@ -1,26 +1,6 @@
-import re
-
 from . import db
-from .command import CommandNotFound, get_command, setup_commands
+from .command import setup_commands, run_command
 
 
 def setup():
     setup_commands(db)
-
-
-def parse_command(command):
-    match = re.match(r"(?P<a>\w+) *(?P<args>.*)?", command)
-    if match is None:
-        raise SyntaxError
-    return match.groups()
-
-
-def run_command(command):
-    try:
-        name, args = parse_command(command)
-        for output in get_command(name).execute(args):
-            print(output)
-    except CommandNotFound:
-        print(f"Command '{name}' does not exist.")
-    except SyntaxError:
-        print(f"A command should be composed of lower-case letters.")

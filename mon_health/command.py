@@ -1,3 +1,4 @@
+import re
 from datetime import datetime
 
 DB = None
@@ -124,6 +125,24 @@ def setup_commands(db, command_table=None, alias_table=None):
         }
     else:
         ALIAS_TABLE = alias_table
+
+
+def parse_command(command):
+    match = re.match(r"(?P<a>\w+) *(?P<args>.*)?", command)
+    if match is None:
+        raise SyntaxError
+    return match.groups()
+
+
+def run_command(command):
+    try:
+        name, args = parse_command(command)
+        for output in get_command(name)(args):
+            print(output)
+    except CommandNotFound:
+        print(f"Command '{name}' does not exist.")
+    except SyntaxError:
+        print(f"A command should be composed of lower-case letters.")
 
 
 def get_command(name):

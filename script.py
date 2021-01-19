@@ -2,7 +2,7 @@
 
 import click
 
-from mon_health import *
+from mon_health import setup, run_command
 
 
 @click.command()
