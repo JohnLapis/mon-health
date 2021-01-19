@@ -2,8 +2,6 @@ import re
 from datetime import datetime, time
 from functools import reduce
 
-DB = None
-COMMAND_TABLE = {}
 
 from .utils import InvalidCommand, format_time, parse_command, parse_date, parse_time
 
