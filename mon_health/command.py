@@ -133,9 +133,10 @@ class FindCommand(Command):
 
             q = q.where(reduce(lambda a, b: a & b, filters))
 
-            match = match_args(r"order +by +(\w+)\b *")
+            match = match_args(r"(?:order +by|sort) +(-?)(\w+)\b *")
             if match:
-                q = q.order_by(getattr(Food, match.groups()[0]))
+                field = getattr(Food, match.groups()[1])
+                q = q.order_by(field.desc() if match.groups()[0] else field)
                 args = args[match.end() :]
             else:
                 q = q.order_by(Food.date)
