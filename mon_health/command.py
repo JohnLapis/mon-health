@@ -162,7 +162,7 @@ def run_command(input):
     except AliasNotFound:
         print(f"Alias '{name}' does not exist.")
     except SyntaxError:
-        print(f"A command should be composed of lower-case letters.")
+        print("A command should be composed of lower-case letters.")
 
 
 def get_alias(name):
