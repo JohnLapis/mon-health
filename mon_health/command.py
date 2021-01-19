@@ -1,5 +1,5 @@
 import re
-from datetime import datetime, time
+from datetime import datetime
 from functools import reduce
 
 
