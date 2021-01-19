@@ -158,6 +158,13 @@ class FindCommand(Command):
 class UpdateCommand(Command):
     description = "Updates entry into database."
 
+    @staticmethod
+    def execute(args):
+        id, name = args.split(",")
+        Food.replace(id=id.strip(), name=name.strip()).execute()
+
+        return []
+
 
 class DeleteCommand(Command):
     description = "Delete entry from database."
