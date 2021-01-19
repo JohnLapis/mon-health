@@ -13,6 +13,10 @@ from .command import (
 class TestHelpCommand:
     @classmethod
     def setup_class(cls):
+        class FakeDb:
+            Food = None
+
+
         class TestCommand:
             description = "Test."
 
@@ -21,7 +25,7 @@ class TestHelpCommand:
             "test2": TestCommand,
         }
 
-        setup_commands(None, COMMAND_TABLE)
+        setup_commands(FakeDb(), COMMAND_TABLE)
 
     @pytest.mark.parametrize(
         "args,expected",
