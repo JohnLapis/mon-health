@@ -153,6 +153,17 @@ class UpdateCommand(Command):
 class DeleteCommand(Command):
     description = "Delete entry from database."
 
+    @staticmethod
+    def execute(args):
+        output = []
+        output.append("ID  TIME  NAME")
+        for id in args.split(","):
+            food = Food.get_by_id(id)
+            output.append(f"{food.id}  {format_time(food.time)}  {food.name}")
+            Food.delete_by_id(id)
+
+        return output
+
 
 class ExitCommand(Command):
     description = "Exits shell."
