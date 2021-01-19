@@ -84,30 +84,30 @@ class FindCommand(Command):
     description = "Finds entry into database."
 
     @staticmethod
-    def execute(args):
-        def match_args(pattern):
-            return re.match(pattern, args, re.IGNORECASE)
+    def parse_args(args):
+        def match_remaining_input(pattern):
+            return re.match(pattern, remaining_input, re.IGNORECASE)
 
-        try:
-            q = Food.select()
-            filters = []
-
-            match = match_args(r"today *")
+        def match_date(args, filters):
+            match = match_remaining_input(r"today *")
             if match:
                 filters.append(Food.date == datetime.now().date())
                 args = args[match.end() :]
             else:
-                match = match_args(r"(\S+) *")
+                match = match_remaining_input(r"(\d+$|\d+\s|\d+(/\d+)+)\s*")
                 if match and ":" not in match.group() and "h" not in match.group():
                     filters.append(Food.date == parse_date(match.groups()[0]))
                     args = args[match.end() :]
 
-            match = match_args(r"(\d+:\d+) *")
+            return args, filters
+
+        def match_time(args, filters):
+            match = match_remaining_input(r"(\d+:\d+) *")
             if match:
                 filters.append(Food.time == parse_time(match.groups()[0]))
                 args = args[match.end() :]
             else:
-                match = match_args(r"(\S+)h *")
+                match = match_remaining_input(r"(\S+)h *")
                 if match:
                     hour = match.groups()[0]
                     low = parse_time(hour + ":00")
@@ -115,25 +115,45 @@ class FindCommand(Command):
                     filters.append(Food.time.between(low, high))
                     args = args[match.end() :]
 
-            q = q.where(reduce(lambda a, b: a & b, filters))
+            return args, filters
 
-            match = match_args(r"(?:order +by|sort) +(-?)(\w+)\b *")
+        def match_sorting(args, query):
+            match = match_remaining_input(r"(?:order +by|sort) +(-?)(\w+)\b *")
             if match:
                 field = getattr(Food, match.groups()[1])
-                q = q.order_by(field.desc() if match.groups()[0] else field)
+                query = query.order_by(field.desc() if match.groups()[0] else field)
                 args = args[match.end() :]
             else:
-                q = q.order_by(Food.date)
-        except IndexError:
-            raise "algo"
+                query = query.order_by(Food.date)
 
-        match = match_args(r"limit +(\d+)\b *")
-        if match:
-            q = q.limit(match.groups()[0])
+            return args, query
 
+        def match_limit(args, query):
+            match = match_remaining_input(r"limit +(\d+)\b *")
+            if match:
+                query = query.limit(match.groups()[0])
+                args = args[match.end() :]
+
+            return args, query
+
+        remaining_input = args
+
+        filters = []
+        remaining_input, filters = match_date(remaining_input, filters)
+        remaining_input, filters = match_time(remaining_input, filters)
+
+        query = Food.select().where(reduce(lambda a, b: a & b, filters))
+        remaining_input, query = match_sorting(remaining_input, query)
+        remaining_input, query = match_limit(remaining_input, query)
+
+        return query
+
+    @staticmethod
+    def execute(args):
+        query = FindCommand.parse_args(args)
         output = []
         output.append("ID  TIME  NAME")
-        for food in q:
+        for food in query:
             output.append(f"{food.id}  {format_time(food.time)}  {food.name}")
 
         return output
