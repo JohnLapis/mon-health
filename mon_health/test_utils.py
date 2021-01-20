@@ -6,9 +6,9 @@ from .utils import (
     InvalidCommand,
     InvalidDate,
     InvalidTime,
+    convert_to_date,
+    convert_to_time,
     parse_command,
-    parse_date,
-    parse_time,
 )
 
 
@@ -26,14 +26,14 @@ from .utils import (
         ("1/12/1920", datetime(day=1, month=12, year=1920)),
     ],
 )
-def test_parse_date_given_valid_input(string, expected):
-    assert parse_date(string) == expected
+def test_convert_to_date_given_valid_input(string, expected):
+    assert convert_to_date(string) == expected
 
 
 @pytest.mark.parametrize("string", ["", "a", "1//", "1/0t", "6/6/2020/20"])
-def test_parse_date_given_invalid_input(string):
+def test_convert_to_date_given_invalid_input(string):
     with pytest.raises(InvalidDate):
-        parse_date(string)
+        convert_to_date(string)
 
 
 @pytest.mark.parametrize(
@@ -45,14 +45,14 @@ def test_parse_date_given_invalid_input(string):
         ("1:01", time(hour=1, minute=1)),
     ],
 )
-def test_parse_time_given_valid_input(string, expected):
-    assert parse_time(string) == expected
+def test_convert_to_time_given_valid_input(string, expected):
+    assert convert_to_time(string) == expected
 
 
 @pytest.mark.parametrize("string", ["", "a", "1:a", "1:1:1"])
-def test_parse_time_given_invalid_input(string):
+def test_convert_to_time_given_invalid_input(string):
     with pytest.raises(InvalidTime):
-        parse_time(string)
+        convert_to_time(string)
 
 
 @pytest.mark.parametrize(

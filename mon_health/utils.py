@@ -14,7 +14,7 @@ class InvalidCommand(Exception):
     pass
 
 
-def parse_date(string):
+def convert_to_date(string):
     try:
         date_params = string.split("/")
         assert 1 <= len(date_params) <= 3
@@ -26,7 +26,7 @@ def parse_date(string):
         raise InvalidDate
 
 
-def parse_time(string):
+def convert_to_time(string):
     try:
         time_params = string.split(":")
         assert 1 <= len(time_params) <= 2
