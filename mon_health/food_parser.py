@@ -30,6 +30,13 @@ class InvalidLimit(Exception):
     pass
 
 
+class Match:
+    def __init__(self, matched, start, end):
+        self.matched = matched
+        self.start = start
+        self.end = end
+
+
 class FoodParser:
     exprs = [
         {
@@ -68,16 +75,15 @@ class FoodParser:
         self.returning_clause = []
 
     def parse_expr(self, *, name, keyword_pattern, value_pattern):
-        keyword, keyword_start, keyword_end = self.search_keyword(
-            keyword_pattern, self.input
+        keyword_match = self.search_keyword(keyword_pattern, self.input)
+        value_match = self.match_value(
+            value_pattern, self.input[keyword_match.end :]
         )
-        value, _, value_end = self.match_value(
-            value_pattern, self.input[keyword_end:]
-        )
-        expr_start, expr_end = keyword_start, keyword_end + value_end
+        expr_start = keyword_match.start
+        expr_end = keyword_match.end + value_match.end
         # whitespace is added in between since it's always matched
         self.input = (self.input[:expr_start] + " " + self.input[expr_end:]).strip()
-        self.get_parser(name)(value)
+        self.get_parser(name)(value_match.matched)
 
     def parse(self):
         for expr in self.exprs:
@@ -99,7 +105,7 @@ class FoodParser:
             pattern = r"(\s+|^)(" + pattern + r")(\s+|$)"
             match = re.search(pattern, string, re.I)
             assert match and not self.ends_with_keyword(string[: match.start()])
-            return (match.group(2), match.start(), match.end())
+            return Match(match.group(2), match.start(), match.end())
         except AssertionError:
             raise KeywordNotFound(f"String doesn't match pattern '{pattern}'.")
 
@@ -108,7 +114,7 @@ class FoodParser:
             pattern = r"(\s+|^)(" + pattern + r")(\s+|$)"
             match = re.match(pattern, string, re.I)
             assert match
-            return (match.group(2), match.start(), match.end())
+            return Match(match.group(2), match.start(), match.end())
         except AssertionError:
             invalid_value = re.match(r"\S*", string).group()
             raise InvalidValue(f"Value '{invalid_value}' is invalid.")

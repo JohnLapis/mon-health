@@ -204,8 +204,8 @@ def test_search_keyword(string, expr_name, expected):
         with pytest.raises(KeywordNotFound):
             parser.search_keyword(pattern, string)
     else:
-        match, *_ = parser.search_keyword(pattern, string)
-        assert match == expected
+        match = parser.search_keyword(pattern, string)
+        assert match.matched == expected
 
 
 @pytest.mark.skip
