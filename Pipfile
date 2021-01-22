@@ -8,6 +8,7 @@ flake8 = "*"
 isort = "*"
 black = "*"
 pytest = "*"
+pytest-cov = "*"
 
 [packages]
 importlib-metadata = "==2.1.1"
