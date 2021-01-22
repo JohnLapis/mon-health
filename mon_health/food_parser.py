@@ -1,8 +1,9 @@
 import re
+from functools import reduce
 from datetime import datetime
 
 from .db import Food
-from .utils import InvalidTime, convert_to_date, convert_to_time
+from .utils import convert_to_date, convert_to_time
 
 
 class KeywordNotFound(Exception):
@@ -61,9 +62,10 @@ class FoodParser:
 
     def __init__(self, _input):
         self.input = _input
-        self.where_clause = None
-        self.sort_clause = None
-        self.limit_clause = None
+        self.where_clause_exprs = []
+        self.sort_clause = []
+        self.limit_clause = -1
+        self.returning_clause = []
 
     def parse_expr(self, *, name, keyword_pattern, value_pattern):
         keyword, keyword_start, keyword_end = self.search_keyword(
@@ -114,11 +116,12 @@ class FoodParser:
     def get_parser(self, name):
         return getattr(self, f"parse_{name}")
 
-    def add_to_where_clause(self, expr):
-        if self.where_clause is None:
-            self.where_clause = expr
+    @property
+    def where_clause(self):
+        if self.where_clause_exprs:
+            return reduce(lambda a, b: a & b, self.where_clause_exprs)
         else:
-            self.where_clause &= expr
+            return True
 
     def parse_name(self, string):
         if not re.match(r"([\"'`]).*\1", string):
@@ -126,38 +129,36 @@ class FoodParser:
         if not string[1:-1]:
             raise InvalidName("Name can't be empty.")
 
-        self.add_to_where_clause(Food.name == string[1:-1])
+        self.where_clause_exprs.append(Food.name == string[1:-1])
 
     def parse_date(self, string):
         if re.match(string, "today", re.I):
-            self.add_to_where_clause(Food.date == datetime.now().date())
+            expr = Food.date == datetime.now().date()
         else:
-            self.add_to_where_clause(Food.date == convert_to_date(string))
+            expr = Food.date == convert_to_date(string)
+
+        self.where_clause_exprs.append(expr)
 
     def parse_time(self, string):
         if string.endswith("h"):
             hour = string[:-1]
             low = convert_to_time(hour + ":00")
             high = convert_to_time(hour + ":59")
-            self.add_to_where_clause(Food.time.between(low, high))
-        elif ":" in string:
-            self.add_to_where_clause(Food.time == convert_to_time(string))
+            expr = Food.time.between(low, high)
         else:
-            raise InvalidTime
+            expr = Food.time == convert_to_time(string)
 
-    def add_to_sort_clause(self, column):
-        if self.sort_clause is None:
-            self.sort_clause = []
-        self.sort_clause.append(column)
+        self.where_clause_exprs.append(expr)
 
     def parse_sort(self, string):
         try:
-            for param in string.split(","):
-                if param.startswith("-"):
-                    column = getattr(Food, param[1:]).desc()
+            columns = []
+            for name in string.split(","):
+                if name.startswith("-"):
+                    columns.append(getattr(Food, name[1:]).desc())
                 else:
-                    column = getattr(Food, param).asc()
-                self.add_to_sort_clause(column)
+                    columns.append(getattr(Food, name).asc())
+            self.sort_clause = columns
         except AttributeError:
             raise InvalidColumn
 

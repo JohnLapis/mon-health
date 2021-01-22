@@ -10,7 +10,6 @@ from .food_parser import (
     InvalidLimit,
     InvalidName,
     InvalidColumn,
-    InvalidTime,
     InvalidValue,
     KeywordNotFound,
 )
@@ -78,8 +77,8 @@ def compare_nested_exprs(expr1, expr2):
                     & (Food.date == datetime(day=12, month=12, year=now().year))
                     & (Food.time == time(hour=5, minute=5))
                 ),
-                "sort_clause": None,
-                "limit_clause": None,
+                "sort_clause": [],
+                "limit_clause": -1,
             },
         ),
         (
@@ -90,8 +89,8 @@ def compare_nested_exprs(expr1, expr2):
                     & (Food.date == datetime(day=12, month=12, year=now().year))
                     & (Food.time == time(hour=5, minute=5))
                 ),
-                "sort_clause": None,
-                "limit_clause": None,
+                "sort_clause": [],
+                "limit_clause": -1,
             },
         ),
         (
@@ -102,8 +101,8 @@ def compare_nested_exprs(expr1, expr2):
                     & (Food.date == datetime(day=12, month=12, year=now().year))
                     & (Food.time == time(hour=5, minute=5))
                 ),
-                "sort_clause": None,
-                "limit_clause": None,
+                "sort_clause": [],
+                "limit_clause": -1,
             },
         ),
         (
@@ -115,15 +114,15 @@ def compare_nested_exprs(expr1, expr2):
                         time(hour=5, minute=00), time(hour=5, minute=59)
                     )
                 ),
-                "sort_clause": None,
-                "limit_clause": None,
+                "sort_clause": [],
+                "limit_clause": -1,
             },
         ),
         (
             # shows where_clause is optional
             "sort time limit 5",
             {
-                "where_clause": None,
+                "where_clause": True,
                 "sort_clause": [Food.time.asc()],
                 "limit_clause": 5,
             },
@@ -131,17 +130,17 @@ def compare_nested_exprs(expr1, expr2):
         (
             "limit 5",
             {
-                "where_clause": None,
-                "sort_clause": None,
+                "where_clause": True,
+                "sort_clause": [],
                 "limit_clause": 5,
             },
         ),
         (
             "",
             {
-                "where_clause": None,
-                "sort_clause": None,
-                "limit_clause": None,
+                "where_clause": True,
+                "sort_clause": [],
+                "limit_clause": -1,
             },
         ),
     ],
@@ -217,24 +216,6 @@ def test_ends_with_keyword():
 @pytest.mark.parametrize(
     "args,expected",
     [
-        ([1], 1),
-        ([0], 0),
-        ([1, 1], 1),
-        ([1, 0], 0),
-        ([0, 1], 0),
-        ([0, 0], 0),
-    ],
-)
-def test_add_to_where_clause_given_valid_args(args, expected):
-    parser = FoodParser("")
-    for arg in args:
-        parser.add_to_where_clause(arg)
-    assert parser.where_clause == expected
-
-
-@pytest.mark.parametrize(
-    "args,expected",
-    [
         ('"hotdog"', Food.name == "hotdog"),
         ("`hotdog`", Food.name == "hotdog"),
         ("'hotdog'", Food.name == "hotdog"),
@@ -296,27 +277,6 @@ def test_parse_time_given_valid_args(args, expected):
     parser = FoodParser("")
     parser.parse_time(args)
     assert compare_nested_exprs(parser.where_clause, expected)
-
-
-@pytest.mark.parametrize("args", ["", "18"])
-def test_parse_time_given_invalid_args(args):
-    parser = FoodParser("")
-    with pytest.raises(InvalidTime):
-        parser.parse_time(args)
-
-
-@pytest.mark.parametrize(
-    "args,expected",
-    [
-        (["a"], ["a"]),
-        (["a", 1], ["a", 1]),
-    ],
-)
-def test_add_to_sort_clause_given_valid_args(args, expected):
-    parser = FoodParser("")
-    for arg in args:
-        parser.add_to_sort_clause(arg)
-    assert parser.sort_clause == expected
 
 
 @pytest.mark.parametrize(
