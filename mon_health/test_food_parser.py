@@ -324,7 +324,7 @@ def test_add_to_sort_clause_given_valid_args(args, expected):
     [
         ("date", [Food.date.asc()]),
         ("-date", [Food.date.desc()]),
-        ("date   ,  -name", [Food.date.asc(), Food.name.desc()]),
+        ("-date,-name,time", [Food.date.desc(), Food.name.desc(), Food.time.asc()]),
         ("date,-name", [Food.date.asc(), Food.name.desc()]),
     ],
 )

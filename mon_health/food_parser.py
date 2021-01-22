@@ -152,7 +152,7 @@ class FoodParser:
 
     def parse_sort(self, string):
         try:
-            for param in re.split(r"\s*,\s*", value):
+            for param in string.split(","):
                 if param.startswith("-"):
                     column = getattr(Food, param[1:]).desc()
                 else:
