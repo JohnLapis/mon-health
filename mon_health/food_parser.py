@@ -21,7 +21,7 @@ class InvalidName(Exception):
     pass
 
 
-class InvalidSortField(Exception):
+class InvalidColumn(Exception):
     pass
 
 
@@ -114,11 +114,11 @@ class FoodParser:
     def get_parser(self, name):
         return getattr(self, f"parse_{name}")
 
-    def add_to_where_clause(self, value):
+    def add_to_where_clause(self, expr):
         if self.where_clause is None:
-            self.where_clause = value
+            self.where_clause = expr
         else:
-            self.where_clause &= value
+            self.where_clause &= expr
 
     def parse_name(self, string):
         if not re.match(r"([\"'`]).*\1", string):
@@ -128,42 +128,42 @@ class FoodParser:
 
         self.add_to_where_clause(Food.name == string[1:-1])
 
-    def parse_date(self, value):
-        if re.match(value, "today", re.I):
+    def parse_date(self, string):
+        if re.match(string, "today", re.I):
             self.add_to_where_clause(Food.date == datetime.now().date())
         else:
-            self.add_to_where_clause(Food.date == convert_to_date(value))
+            self.add_to_where_clause(Food.date == convert_to_date(string))
 
-    def parse_time(self, value):
-        if value.endswith("h"):
-            hour = value[:-1]
+    def parse_time(self, string):
+        if string.endswith("h"):
+            hour = string[:-1]
             low = convert_to_time(hour + ":00")
             high = convert_to_time(hour + ":59")
             self.add_to_where_clause(Food.time.between(low, high))
-        elif ":" in value:
-            self.add_to_where_clause(Food.time == convert_to_time(value))
+        elif ":" in string:
+            self.add_to_where_clause(Food.time == convert_to_time(string))
         else:
             raise InvalidTime
 
-    def add_to_sort_clause(self, value):
+    def add_to_sort_clause(self, column):
         if self.sort_clause is None:
             self.sort_clause = []
-        self.sort_clause.append(value)
+        self.sort_clause.append(column)
 
-    def parse_sort(self, value):
+    def parse_sort(self, string):
         try:
             for param in re.split(r"\s*,\s*", value):
                 if param.startswith("-"):
-                    field = getattr(Food, param[1:]).desc()
+                    column = getattr(Food, param[1:]).desc()
                 else:
-                    field = getattr(Food, param).asc()
-                self.add_to_sort_clause(field)
+                    column = getattr(Food, param).asc()
+                self.add_to_sort_clause(column)
         except AttributeError:
-            raise InvalidSortField
+            raise InvalidColumn
 
-    def parse_limit(self, value):
+    def parse_limit(self, string):
         try:
-            limit = int(value)
+            limit = int(string)
             assert limit >= 0
             self.limit_clause = limit
         except (ValueError, TypeError, AssertionError):

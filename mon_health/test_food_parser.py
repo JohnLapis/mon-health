@@ -9,7 +9,7 @@ from .food_parser import (
     InvalidExpression,
     InvalidLimit,
     InvalidName,
-    InvalidSortField,
+    InvalidColumn,
     InvalidTime,
     InvalidValue,
     KeywordNotFound,
@@ -346,7 +346,7 @@ def test_parse_sort_given_valid_args(args, expected):
 )
 def test_parse_sort_given_invalid_args(args):
     parser = FoodParser("")
-    with pytest.raises(InvalidSortField):
+    with pytest.raises(InvalidColumn):
         parser.parse_sort(args)
 
 
