@@ -5,6 +5,7 @@ import pytest
 
 from .command import (
     CommandNotFound,
+    ExitCommand,
     FindCommand,
     HelpCommand,
     IdFieldNotFound,
@@ -232,3 +233,8 @@ class TestUpdateCommand:
         UpdateCommand.execute(f"id {inserted_id} name '{new_name}'")
 
         assert self.Food.get_by_id(inserted_id).name == new_name
+
+class TestExitCommand:
+    @pytest.mark.parametrize("args", ["", "a"])
+    def test_execute_args_given_valid_args(self, args):
+        assert ExitCommand.execute(args) == []
