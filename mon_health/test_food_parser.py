@@ -6,10 +6,10 @@ import pytest
 from .food_parser import (
     Food,
     FoodParser,
+    InvalidColumn,
     InvalidExpression,
     InvalidLimit,
     InvalidName,
-    InvalidColumn,
     InvalidValue,
     KeywordNotFound,
 )
@@ -253,6 +253,7 @@ def test_parse_name_given_valid_args(args, expected):
     parser = FoodParser("")
     parser.parse_name(args)
     assert compare_nested_exprs(parser.where_clause, expected)
+    assert parser.name == expected.rhs
 
 
 @pytest.mark.parametrize(
@@ -285,6 +286,7 @@ def test_parse_date_given_valid_args(args, expected):
     parser = FoodParser("")
     parser.parse_date(args)
     assert compare_nested_exprs(parser.where_clause, expected)
+    assert parser.date == expected.rhs
 
 
 @pytest.mark.parametrize(
@@ -304,6 +306,10 @@ def test_parse_time_given_valid_args(args, expected):
     parser = FoodParser("")
     parser.parse_time(args)
     assert compare_nested_exprs(parser.where_clause, expected)
+    if isinstance(expected.rhs, time):
+        assert parser.time == expected.rhs
+    else:
+        assert parser.time == expected.rhs.nodes[0]
 
 
 @pytest.mark.parametrize(

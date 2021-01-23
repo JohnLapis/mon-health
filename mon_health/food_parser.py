@@ -1,6 +1,8 @@
 import re
+from datetime import datetime, time
 from functools import reduce
-from datetime import datetime
+
+from peewee import SQL, Expression, NodeList
 
 from .db import Food
 from .utils import convert_to_date, convert_to_time
@@ -75,6 +77,9 @@ class FoodParser:
     def __init__(self, _input):
         self.input = _input
         self.where_clause_exprs = []
+        self.name = None
+        self.date = None
+        self.time = None
         self.sort_clause = []
         self.limit_clause = -1
         self.returning_clause = []
@@ -140,26 +145,31 @@ class FoodParser:
         if not string[1:-1]:
             raise InvalidName("Name can't be empty.")
 
-        self.where_clause_exprs.append(Food.name == string[1:-1])
+        op, rhs = "=", string[1:-1]
+        self.name = rhs
+        self.where_clause_exprs.append(Expression(Food.name, op, rhs))
 
     def parse_date(self, string):
         if re.match(string, "today", re.I):
-            expr = Food.date == datetime.now().date()
+            op, rhs = "=", datetime.now().date()
         else:
-            expr = Food.date == convert_to_date(string)
+            op, rhs = "=", convert_to_date(string)
 
-        self.where_clause_exprs.append(expr)
+        self.date = rhs
+        self.where_clause_exprs.append(Expression(Food.date, op, rhs))
 
     def parse_time(self, string):
         if string.endswith("h"):
+            op = "BETWEEN"
             hour = string[:-1]
-            low = convert_to_time(hour + ":00")
-            high = convert_to_time(hour + ":59")
-            expr = Food.time.between(low, high)
+            low, high = convert_to_time(hour + ":00"), convert_to_time(hour + ":59")
+            rhs = NodeList((low, SQL("AND"), high))
+            self.time = low
         else:
-            expr = Food.time == convert_to_time(string)
+            op, rhs = "=", convert_to_time(string)
+            self.time = rhs
 
-        self.where_clause_exprs.append(expr)
+        self.where_clause_exprs.append(Expression(Food.time, op, rhs))
 
     def parse_sort(self, string):
         try:
