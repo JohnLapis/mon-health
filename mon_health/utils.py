@@ -37,13 +37,66 @@ def convert_to_time(string):
         raise InvalidTime
 
 
-def format_time(time):
-    return time.strftime("%H:%M")
-
-
 def parse_command(command):
     match = re.match(r"\s*(?P<a>\S+)\s*(?P<args>.*)?", command)
     if match is None:
         raise InvalidCommand
     name, args = match.groups()
     return [name, "" if args is None else args.strip()]
+
+
+def format_time(value):
+    assert isinstance(value, time)
+    return value.strftime("%H:%M")
+
+
+def format_date(value):
+    assert isinstance(value, datetime)
+    return value.strftime("%d/%m/%Y")
+
+
+formatters = {
+    time: format_time,
+    datetime: format_date,
+    str: str,
+    int: str,
+}
+
+
+def format_value(value):
+    return formatters[type(value)](value)
+
+
+def format_column_name(name):
+    return name.upper()
+
+
+def pad_row_values(row, column_widths):
+    assert set(row.keys()) == set(column_widths.keys())
+    return {col: row[col].ljust(width) for col, width in column_widths.items()}
+
+
+def format_rows(rows, cols, col_sep="|"):
+    assert len(col_sep) == 1
+    col_sep = " " + col_sep + " "
+
+    column_names_row = {col: format_column_name(col) for col in cols}
+    max_column_lengths = {col: len(column_names_row[col]) for col in cols}
+
+    formatted_rows = []
+    for row in rows:
+        assert set(cols).issubset(set(row.keys()))
+        formatted_row = {}
+        for col in cols:
+            formatted_row[col] = format_value(row[col])
+            max_column_lengths[col] = max(
+                max_column_lengths[col], len(formatted_row[col])
+            )
+
+        formatted_rows.append(formatted_row)
+
+    yield col_sep.join(pad_row_values(column_names_row, max_column_lengths).values())
+    yield "-+-".join(["-" * length for length in max_column_lengths.values()])
+
+    for row in formatted_rows:
+        yield col_sep.join(pad_row_values(row, max_column_lengths).values())
