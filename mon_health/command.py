@@ -89,19 +89,20 @@ class FindCommand(Command):
     def parse_args(args):
         parser = FoodParser(args)
         parser.parse()
-        return (
+        query = (
             Food.select(*parser.returning_clause)
             .where(parser.where_clause)
             .order_by(*(parser.sort_clause or (Food.date.asc(), Food.time.asc())))
             .limit(parser.limit_clause)
             .dicts()
         )
+        return query, parser.columns or ["id", "name", "time", "date"]
 
     @staticmethod
     def execute(args):
         try:
-            query = FindCommand.parse_args(args)
-            return format_rows(query)
+            query, columns = FindCommand.parse_args(args)
+            return format_rows(query, columns)
         except Exception as e:
             return [e.args[0]]
 

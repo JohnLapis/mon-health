@@ -92,6 +92,7 @@ class FoodParser:
         self.time = None
         self.sort_clause = []
         self.limit_clause = -1
+        self.columns = []
         self.returning_clause = []
 
     def parse_expr(self, *, name, keyword_pattern, value_pattern):
@@ -220,5 +221,6 @@ class FoodParser:
             self.returning_clause = [
                 getattr(Food, name) for name in string.split(",")
             ]
+            self.columns = [col.name for col in self.returning_clause]
         except AttributeError:
             raise InvalidColumn

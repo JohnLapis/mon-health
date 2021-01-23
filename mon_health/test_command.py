@@ -110,65 +110,81 @@ class TestFindCommand:
         [
             (
                 "n 'hotdog'",
-                lambda Food: (
-                    Food.select()
-                    .where(Food.name == "hotdog")
-                    .order_by(Food.date.asc(), Food.time.asc())
-                    .limit(-1)
-                    .dicts()
+                (
+                    lambda Food: (
+                        Food.select()
+                        .where(Food.name == "hotdog")
+                        .order_by(Food.date.asc(), Food.time.asc())
+                        .limit(-1)
+                        .dicts()
+                    ),
+                    ["id", "name", "time", "date"],
                 ),
             ),
             (
                 "D toDAY",
-                lambda Food: (
-                    Food.select()
-                    .where(Food.date == datetime.now().date())
-                    .order_by(Food.date.asc(), Food.time.asc())
-                    .limit(-1)
-                    .dicts()
+                (
+                    lambda Food: (
+                        Food.select()
+                        .where(Food.date == datetime.now().date())
+                        .order_by(Food.date.asc(), Food.time.asc())
+                        .limit(-1)
+                        .dicts()
+                    ),
+                    ["id", "name", "time", "date"],
                 ),
             ),
             (
                 "soRt date | all",
-                lambda Food: (
-                    Food.select()
-                    .where(True)
-                    .order_by(Food.date.asc())
-                    .limit(-1)
-                    .dicts()
+                (
+                    lambda Food: (
+                        Food.select()
+                        .where(True)
+                        .order_by(Food.date.asc())
+                        .limit(-1)
+                        .dicts()
+                    ),
+                    ["id", "name", "time", "date"],
                 ),
             ),
             (
                 "LimIT 5 | date,time",
-                lambda Food: (
-                    Food.select(Food.date, Food.time)
-                    .where(True)
-                    .order_by(Food.date.asc(), Food.time.asc())
-                    .limit(5)
-                    .dicts()
+                (
+                    lambda Food: (
+                        Food.select(Food.date, Food.time)
+                        .where(True)
+                        .order_by(Food.date.asc(), Food.time.asc())
+                        .limit(5)
+                        .dicts()
+                    ),
+                    ["date", "time"],
                 ),
             ),
             (
                 "d 1/01 Time 5h    sort  date LImit 1 | name",
-                lambda Food: (
-                    Food.select(Food.name)
-                    .where(
-                        (Food.date == datetime(day=1, month=1, year=now().year))
-                        & Food.time.between(
-                            time(hour=5, minute=00), time(hour=5, minute=59)
+                (
+                    lambda Food: (
+                        Food.select(Food.name)
+                        .where(
+                            (Food.date == datetime(day=1, month=1, year=now().year))
+                            & Food.time.between(
+                                time(hour=5, minute=00), time(hour=5, minute=59)
+                            )
                         )
-                    )
-                    .order_by(Food.date.asc())
-                    .limit(1)
-                    .dicts()
+                        .order_by(Food.date.asc())
+                        .limit(1)
+                        .dicts()
+                    ),
+                    ["name"],
                 ),
             ),
         ],
     )
     def test_parse_args_given_valid_args(self, args, expected):
-        query = FindCommand.parse_args(args)
-        expected_query = expected(self.Food)
+        query, columns = FindCommand.parse_args(args)
+        expected_query = expected[0](self.Food)
         assert query.sql() == expected_query.sql()
+        assert columns == expected[1]
 
 
 class TestUpdateCommand:

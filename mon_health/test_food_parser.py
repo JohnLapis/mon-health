@@ -402,6 +402,7 @@ def test_parse_returning_given_valid_args(args, expected):
     parser = FoodParser("")
     parser.parse_returning(args)
     assert parser.returning_clause == expected
+    assert parser.columns == [col.name for col in expected]
 
 
 @pytest.mark.parametrize(
