@@ -94,7 +94,7 @@ class FindCommand(Command):
             query = FindCommand.parse_args(args)
             return format_rows(query)
         except Exception as e:
-            return [e.msg]
+            return [e.args[0]]
 
 
 class UpdateCommand(Command):
@@ -128,14 +128,14 @@ class UpdateCommand(Command):
         except NameFieldNotFound:
             return ["Name field should be given."]
         except Exception as e:
-            return [e.msg]
+            return [e.args[0]]
 
         try:
             rows_modified = Food.replace(**params).execute()
         except IntegrityError:
             return ["Invalid update query."]
         except Exception as e:
-            return [e.msg]
+            return [e.args[0]]
 
         if rows_modified == 1:
             return [f"{rows_modified} row modified."]
