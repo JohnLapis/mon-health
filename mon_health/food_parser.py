@@ -47,7 +47,7 @@ class FoodParser:
         {
             "name": "date",
             "keyword_pattern": r"date|d",
-            "value_pattern": r"\d{1,2}(/\d{1,2}(/\d{1,4})?)?",
+            "value_pattern": r"\d{1,2}(/\d{1,2}(/\d{1,4})?)?|today",
         },
         {
             "name": "time",

@@ -136,6 +136,14 @@ def compare_nested_exprs(expr1, expr2):
             },
         ),
         (
+            "date today",
+            {
+                "where_clause": Food.date == now().date(),
+                "sort_clause": [],
+                "limit_clause": -1,
+            },
+        ),
+        (
             "",
             {
                 "where_clause": True,
