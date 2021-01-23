@@ -66,10 +66,10 @@ class TestInsertCommand:
     @pytest.mark.parametrize(
         "args,expected",
         [
-            ("a", ["a"]),
-            ("a, b  ", ["a", "b"]),
-            ("  a  , b  ", ["a", "b"]),
-            (" z,a  ", ["a", "z"]),
+            ("a", [{"name": "a"}]),
+            ("a, b  ", [{"name": "a"}, {"name": "b"}]),
+            ("  a  , b  ", [{"name": "a"}, {"name": "b"}]),
+            (" z,a  ", [{"name": "a"}, {"name": "z"}]),
         ],
     )
     def test_parse_args_given_valid_args(self, args, expected):

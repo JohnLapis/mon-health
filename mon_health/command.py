@@ -62,15 +62,17 @@ class InsertCommand(Command):
 
     @staticmethod
     def parse_args(args):
-        return sorted(re.split(r"\s*,\s*", args.strip()))
+        return [
+            {"name": name} for name in sorted(re.split(r"\s*,\s*", args.strip()))
+        ]
 
     @staticmethod
     def execute(args):
-        Food.insert_many(
-            [{"name": name} for name in InsertCommand.parse_args(args)]
-        ).execute()
-
-        return []
+        try:
+            Food.insert_many(InsertCommand.parse_args(args)).execute()
+            return []
+        except Exception as e:
+            return [e.args[0]]
 
 
 class FindCommand(Command):
