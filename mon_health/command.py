@@ -148,15 +148,30 @@ class DeleteCommand(Command):
     description = "Delete entry from database."
 
     @staticmethod
-    def execute(args):
-        output = []
-        output.append("ID  TIME  NAME")
-        for id in args.split(","):
-            food = Food.get_by_id(id)
-            output.append(f"{food.id}  {format_time(food.time)}  {food.name}")
-            Food.delete_by_id(id)
+    def parse_args(args):
+        parser = FoodParser(args)
+        parser.parse()
+        return Food.delete().where(parser.where_clause)
 
-        return output
+    @staticmethod
+    def execute(args):
+        try:
+            query = DeleteCommand.parse_args(args)
+        except IdFieldNotFound:
+            return ["Id field should be given."]
+        except Exception as e:
+            return [e.args[0]]
+
+        try:
+            rows_modified = query.execute()
+        except IntegrityError:
+            return ["Invalid delete query."]
+        except Exception as e:
+            return [e.args[0]]
+
+        if rows_modified == 1:
+            return [f"{rows_modified} row modified."]
+        return [f"{rows_modified} rows modified."]
 
 
 class ExitCommand(Command):

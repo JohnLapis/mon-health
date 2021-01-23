@@ -5,6 +5,7 @@ import pytest
 
 from .command import (
     CommandNotFound,
+    DeleteCommand,
     ExitCommand,
     FindCommand,
     HelpCommand,
@@ -233,6 +234,55 @@ class TestUpdateCommand:
         UpdateCommand.execute(f"id {inserted_id} name '{new_name}'")
 
         assert self.Food.get_by_id(inserted_id).name == new_name
+
+
+class TestDeleteCommand:
+    @classmethod
+    def setup_class(cls):
+        from . import db
+
+        setup_commands(db)
+        cls.Food = db.Food
+
+    @pytest.mark.parametrize(
+        "args,expected",
+        [
+            (
+                "iD 1 n `foo` d 1/06 t 1:55",
+                lambda Food: (
+                    Food.delete().where(
+                        (Food.id == 1)
+                        & (Food.name == "foo")
+                        & (Food.date == datetime(day=1, month=6, year=now().year))
+                        & (Food.time == time(hour=1, minute=55))
+                    )
+                ),
+            ),
+            (
+                "id 1 name `foo`",
+                lambda Food: (
+                    Food.delete().where((Food.id == 1) & (Food.name == "foo"))
+                ),
+            ),
+        ],
+    )
+    def test_parse_args_given_valid_args(self, args, expected):
+        query = DeleteCommand.parse_args(args)
+        expected_query = expected(self.Food)
+        assert query.sql() == expected_query.sql()
+
+    def test_execute_args_given_valid_args(self):
+        random_string = get_random_string(20)
+        self.Food.insert(name=random_string).execute()
+        inserted_id = (
+            self.Food.select().where(self.Food.name == random_string).get().id
+        )
+
+        DeleteCommand.execute(f"name '{random_string}'")
+
+        query = self.Food.select().where(self.Food.id == inserted_id).execute()
+        assert list(query) == []
+
 
 class TestExitCommand:
     @pytest.mark.parametrize("args", ["", "a"])
