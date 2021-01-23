@@ -191,6 +191,7 @@ def setup_commands(db, command_table=None, alias_table=None):
             "d": "delete",
             "today": "find date today",
             "last": "find date today limit",
+            "id": "find id",
             "name": "find name",
             "date": "find date",
             "time": "find time",
