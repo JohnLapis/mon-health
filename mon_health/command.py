@@ -198,8 +198,11 @@ def setup_commands(db, command_table=None, alias_table=None):
             "f": "find",
             "u": "update",
             "d": "delete",
-            "today": "find today",
-            "last": "find today limit",
+            "today": "find date today",
+            "last": "find date today limit",
+            "name": "find name",
+            "date": "find date",
+            "time": "find time",
         }
     else:
         ALIAS_TABLE = alias_table
