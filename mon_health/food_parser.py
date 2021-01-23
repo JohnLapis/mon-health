@@ -193,16 +193,19 @@ class FoodParser:
         self.where_clause_exprs.append(Expression(Food.time, op, rhs))
 
     def parse_sort(self, string):
-        try:
-            columns = []
-            for name in string.split(","):
+        columns = []
+        for name in string.split(","):
+            try:
                 if name.startswith("-"):
-                    columns.append(getattr(Food, name[1:]).desc())
+                    column = name[1:]
+                    columns.append(getattr(Food, column).desc())
                 else:
-                    columns.append(getattr(Food, name).asc())
+                    column = name
+                    columns.append(getattr(Food, column).asc())
+            except AttributeError:
+                raise InvalidColumn(f"Column '{column}' doesn't exist.")
+
             self.sort_clause = columns
-        except AttributeError:
-            raise InvalidColumn
 
     def parse_limit(self, string):
         try:
@@ -217,10 +220,12 @@ class FoodParser:
             self.returning_clause = []
             return
 
-        try:
-            self.returning_clause = [
-                getattr(Food, name) for name in string.split(",")
-            ]
-            self.columns = [col.name for col in self.returning_clause]
-        except AttributeError:
-            raise InvalidColumn
+        columns = []
+        for column in string.split(","):
+            try:
+                columns.append(getattr(Food, column))
+            except AttributeError:
+                raise InvalidColumn(f"Column '{column}' doesn't exist.")
+
+        self.returning_clause = columns
+        self.columns = [col.name for col in self.returning_clause]
