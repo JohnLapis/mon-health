@@ -240,11 +240,11 @@ def parse_input(input):
 def run_command(input):
     try:
         command, args = parse_input(input)
+
+        for output in command.execute(args):
+            print(output)
     except Exception as e:
         print(e.args[0])
-
-    for output in command.execute(args):
-        print(output)
 
 
 def get_command(name):
