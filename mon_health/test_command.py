@@ -115,7 +115,7 @@ class TestFindCommand:
                 ),
             ),
             (
-                "soRt date",
+                "soRt date | all",
                 lambda Food: (
                     Food.select()
                     .where(True)
@@ -124,17 +124,19 @@ class TestFindCommand:
                     .dicts()
                 ),
             ),
-            ("LimIT 5", lambda Food: (
-                Food.select()
-                .where(True)
-                .order_by(Food.date.asc(), Food.time.asc())
-                .limit(5)
-                .dicts())
+            (
+                "LimIT 5 | date,time",
+                lambda Food: (
+                    Food.select(Food.date, Food.time)
+                    .where(True)
+                    .order_by(Food.date.asc(), Food.time.asc())
+                    .limit(5)
+                    .dicts())
              ),
             (
-                "d 1/01 Time 5h    sort  date LImit 1",
+                "d 1/01 Time 5h    sort  date LImit 1 | name",
                 lambda Food: (
-                    Food.select()
+                    Food.select(Food.name)
                     .where(
                         (Food.date == datetime(day=1, month=1, year=now().year))
                         & Food.time.between(

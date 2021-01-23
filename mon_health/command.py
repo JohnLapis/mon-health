@@ -85,7 +85,7 @@ class FindCommand(Command):
         parser = FoodParser(args)
         parser.parse()
         return (
-            Food.select()
+            Food.select(*parser.returning_clause)
             .where(parser.where_clause)
             .order_by(*(parser.sort_clause or (Food.date.asc(), Food.time.asc())))
             .limit(parser.limit_clause)
