@@ -1,13 +1,13 @@
 from datetime import datetime, time
 
-from peewee import DateField, Model, SqliteDatabase, CharField, TimeField
+from peewee import CharField, DateField, Model, SqliteDatabase, TimeField
 
 db = SqliteDatabase("health.db")
 
 
 def current_time():
     now = datetime.now().time()
-    return  time(hour=now.hour, minute=now.minute)
+    return time(hour=now.hour, minute=now.minute)
 
 
 def current_date():
