@@ -11,9 +11,11 @@ def main():
     setup()
     while True:
         try:
-            query = input(">>> ").strip()
-            if query:
-                execute_query(query)
+            queries = [query.strip() for query in input(">>> ").split(";")]
+            for query in queries:
+                if query:
+                    execute_query(query)
+                    print()
         except KeyboardInterrupt:
             print()
             continue
