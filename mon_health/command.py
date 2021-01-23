@@ -94,13 +94,11 @@ class FindCommand(Command):
 
     @staticmethod
     def execute(args):
-        query = FindCommand.parse_args(args)
-        output = []
-        output.append("ID  TIME  NAME")
-        for food in query:
-            output.append(f"{food.id}  {format_time(food.time)}  {food.name}")
-
-        return output
+        try:
+            query = FindCommand.parse_args(args)
+            return format_rows(query)
+        except Exception as e:
+            return [e.msg]
 
 
 class UpdateCommand(Command):
