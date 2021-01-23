@@ -68,7 +68,8 @@ class TestInsertCommand:
         [
             ("a", ["a"]),
             ("a, b  ", ["a", "b"]),
-            (" a  , b  ", ["a", "b"]),
+            ("  a  , b  ", ["a", "b"]),
+            (" z,a  ", ["a", "z"]),
         ],
     )
     def test_parse_args_given_valid_args(self, args, expected):

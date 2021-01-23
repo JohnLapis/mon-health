@@ -1,3 +1,4 @@
+import re
 
 from .food_parser import FoodParser
 from .utils import (
@@ -63,10 +64,7 @@ class InsertCommand(Command):
 
     @staticmethod
     def parse_args(args):
-        try:
-            return [arg.strip() for arg in args.split(",")]
-        except Exception:
-            raise InvalidArgs
+        return sorted(re.split(r"\s*,\s*", args.strip()))
 
     @staticmethod
     def execute(args):
