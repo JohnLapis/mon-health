@@ -1,5 +1,5 @@
 from . import db
-from .command import run_command, setup_commands
+from .command import execute_query, setup_commands
 
 
 def setup():

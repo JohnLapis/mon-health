@@ -3,7 +3,7 @@ import re
 from peewee import IntegrityError
 
 from .food_parser import FoodParser
-from .utils import format_rows, parse_query
+from .utils import format_rows
 
 
 class AliasNotFound(Exception):
@@ -225,28 +225,6 @@ def setup_commands(db, command_table=None, alias_table=None):
         ALIAS_TABLE = alias_table
 
 
-def parse_input(input):
-    command_name, args = parse_query(input)
-    try:
-        command = get_command(command_name)
-    except CommandNotFound:
-        input = get_alias(command_name) + " " + args
-        command_name, args = parse_query(input)
-        command = get_command(command_name)
-
-    return command, args
-
-
-def run_command(input):
-    try:
-        command, args = parse_input(input)
-
-        for output in command.execute(args):
-            print(output)
-    except Exception as e:
-        print(e.args[0])
-
-
 def get_command(name):
     try:
         return COMMAND_TABLE[name]
@@ -267,3 +245,31 @@ def get_alias(name):
 
 def get_aliases():
     return ALIAS_TABLE.items()
+
+
+def parse_query(query):
+    match = re.match(r"(?P<command>\S+)(\s+(?P<args>.*))?", query)
+    if match is None:
+        raise CommandNotFound("Command not found.")
+    return match.groupdict()["command"], match.groupdict("")["args"].strip()
+
+
+def parse_input(input):
+    command_name, args = parse_query(input)
+    try:
+        command = get_command(command_name)
+    except CommandNotFound:
+        input = get_alias(command_name) + " " + args
+        command_name, args = parse_query(input)
+        command = get_command(command_name)
+
+    return command, args
+
+
+def execute_query(input):
+    try:
+        command, args = parse_input(input)
+        for output in command.execute(args):
+            print(output)
+    except Exception as e:
+        print(e.args[0])

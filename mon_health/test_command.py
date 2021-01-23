@@ -13,6 +13,7 @@ from .command import (
     InsertCommand,
     NameFieldNotFound,
     UpdateCommand,
+    parse_query,
     setup_commands,
 )
 
@@ -328,3 +329,22 @@ class TestExitCommand:
     @pytest.mark.parametrize("args", ["", "a"])
     def test_execute_args_given_valid_args(self, args):
         assert ExitCommand.execute(args) == []
+
+
+@pytest.mark.parametrize(
+    "string,expected",
+    [
+        ("a", ("a", "")),
+        ("a b", ("a", "b")),
+        ("a    $   ", ("a", "$")),
+        ("a 2       b", ("a", "2       b")),
+    ],
+)
+def test_parse_query_given_valid_input(string, expected):
+    assert parse_query(string) == expected
+
+
+@pytest.mark.parametrize("string", ["", " "])
+def test_parse_query_given_invalid_input(string):
+    with pytest.raises(CommandNotFound):
+        parse_query(string)

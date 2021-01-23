@@ -1,4 +1,3 @@
-import re
 from datetime import date, datetime, time
 
 
@@ -7,10 +6,6 @@ class InvalidTime(Exception):
 
 
 class InvalidDate(Exception):
-    pass
-
-
-class InvalidCommand(Exception):
     pass
 
 
@@ -35,13 +30,6 @@ def convert_to_time(string):
         return time(hour=int(hour), minute=int(minute))
     except (ValueError, AssertionError):
         raise InvalidTime
-
-
-def parse_query(command):
-    match = re.match(r"\s*(?P<name>\S+)(\s+(?P<args>.*))?", command)
-    if match is None:
-        raise InvalidCommand("Invalid command.")
-    return match.groupdict()["name"], match.groupdict("")["args"].strip()
 
 
 def format_time(value):

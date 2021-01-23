@@ -2,7 +2,7 @@
 
 import click
 
-from mon_health import setup, run_command
+from mon_health import execute_query, setup
 
 
 @click.command()
@@ -11,14 +11,14 @@ def main():
     setup()
     while True:
         try:
-            command = input(">>> ").strip()
-            if command:
-                run_command(command)
+            query = input(">>> ").strip()
+            if query:
+                execute_query(query)
         except KeyboardInterrupt:
             print()
             continue
         except EOFError:
-            run_command("exit")
+            execute_query("exit")
             break
 
 

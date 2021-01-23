@@ -3,14 +3,12 @@ from datetime import date, datetime, time
 import pytest
 
 from .utils import (
-    InvalidCommand,
     InvalidDate,
     InvalidTime,
     convert_to_date,
     convert_to_time,
     format_rows,
     pad_row_values,
-    parse_query,
 )
 
 
@@ -56,25 +54,6 @@ def test_convert_to_time_given_valid_input(string, expected):
 def test_convert_to_time_given_invalid_input(string):
     with pytest.raises(InvalidTime):
         convert_to_time(string)
-
-
-@pytest.mark.parametrize(
-    "string,expected",
-    [
-        ("a", ("a", "")),
-        ("a b", ("a", "b")),
-        ("   a    $   ", ("a", "$")),
-        ("a 2       b", ("a", "2       b")),
-    ],
-)
-def test_parse_query_given_valid_input(string, expected):
-    assert parse_query(string) == expected
-
-
-@pytest.mark.parametrize("string", ["", " "])
-def test_parse_query_given_invalid_input(string):
-    with pytest.raises(InvalidCommand):
-        parse_query(string)
 
 
 @pytest.mark.parametrize(
