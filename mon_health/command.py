@@ -3,7 +3,7 @@ import re
 from peewee import IntegrityError
 
 from .food_parser import FoodParser
-from .utils import InvalidCommand, format_rows, format_time, parse_command
+from .utils import InvalidCommand, format_rows, parse_command
 
 
 class AliasNotFound(Exception):
