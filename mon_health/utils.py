@@ -1,5 +1,5 @@
 import re
-from datetime import datetime, time
+from datetime import date, datetime, time
 
 
 class InvalidTime(Exception):
@@ -21,7 +21,7 @@ def convert_to_date(string):
         year = datetime.now().year if len(date_params) < 3 else date_params[2]
         month = datetime.now().month if len(date_params) < 2 else date_params[1]
         day = date_params[0]
-        return datetime(day=int(day), month=int(month), year=int(year))
+        return date(day=int(day), month=int(month), year=int(year))
     except (ValueError, AssertionError):
         raise InvalidDate
 
@@ -50,13 +50,13 @@ def format_time(value):
 
 
 def format_date(value):
-    assert isinstance(value, datetime)
+    assert isinstance(value, date)
     return value.strftime("%d/%m/%Y")
 
 
 formatters = {
     time: format_time,
-    datetime: format_date,
+    date: format_date,
     str: str,
     int: str,
 }

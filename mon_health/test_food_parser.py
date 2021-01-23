@@ -1,4 +1,4 @@
-from datetime import datetime, time
+from datetime import date, datetime, time
 
 import peewee
 import pytest
@@ -60,7 +60,7 @@ def compare_nested_exprs(expr1, expr2):
                 "where_clause": (
                     (Food.id == 1)
                     & (Food.name == "name")
-                    & (Food.date == datetime(day=1, month=1, year=now().year))
+                    & (Food.date == date(day=1, month=1, year=now().year))
                     & Food.time.between(
                         time(hour=5, minute=0),
                         time(hour=5, minute=59),
@@ -77,7 +77,7 @@ def compare_nested_exprs(expr1, expr2):
             {
                 "where_clause": (
                     (Food.name == "name")
-                    & (Food.date == datetime(day=12, month=12, year=now().year))
+                    & (Food.date == date(day=12, month=12, year=now().year))
                     & (Food.time == time(hour=5, minute=5))
                 ),
                 "sort_clause": [],
@@ -90,7 +90,7 @@ def compare_nested_exprs(expr1, expr2):
             {
                 "where_clause": (
                     (Food.name == "name")
-                    & (Food.date == datetime(day=12, month=12, year=now().year))
+                    & (Food.date == date(day=12, month=12, year=now().year))
                     & (Food.time == time(hour=5, minute=5))
                 ),
                 "sort_clause": [],
@@ -103,7 +103,7 @@ def compare_nested_exprs(expr1, expr2):
             {
                 "where_clause": (
                     (Food.name == "name")
-                    & (Food.date == datetime(day=12, month=12, year=now().year))
+                    & (Food.date == date(day=12, month=12, year=now().year))
                     & (Food.time == time(hour=5, minute=5))
                 ),
                 "sort_clause": [],
@@ -308,10 +308,10 @@ def test_parse_name_given_invalid_args(args):
     [
         ("today", Food.date == datetime.now().date()),
         ("toDAY", Food.date == datetime.now().date()),
-        ("1", Food.date == datetime(day=1, month=now().month, year=now().year)),
-        ("18", Food.date == datetime(day=18, month=now().month, year=now().year)),
-        ("18/5", Food.date == datetime(day=18, month=5, year=now().year)),
-        ("1/5/2000", Food.date == datetime(day=1, month=5, year=2000)),
+        ("1", Food.date == date(day=1, month=now().month, year=now().year)),
+        ("18", Food.date == date(day=18, month=now().month, year=now().year)),
+        ("18/5", Food.date == date(day=18, month=5, year=now().year)),
+        ("1/5/2000", Food.date == date(day=1, month=5, year=2000)),
     ],
 )
 def test_parse_date_given_valid_args(args, expected):

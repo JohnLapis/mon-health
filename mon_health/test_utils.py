@@ -1,4 +1,4 @@
-from datetime import datetime, time
+from datetime import date, datetime, time
 
 import pytest
 
@@ -21,12 +21,12 @@ def now():
 @pytest.mark.parametrize(
     "string,expected",
     [
-        ("1", datetime(day=1, month=now().month, year=now().year)),
-        ("01", datetime(day=1, month=now().month, year=now().year)),
-        ("12/1", datetime(day=12, month=1, year=now().year)),
-        ("1/01", datetime(day=1, month=1, year=now().year)),
-        ("1/12", datetime(day=1, month=12, year=now().year)),
-        ("1/12/1920", datetime(day=1, month=12, year=1920)),
+        ("1", date(day=1, month=now().month, year=now().year)),
+        ("01", date(day=1, month=now().month, year=now().year)),
+        ("12/1", date(day=12, month=1, year=now().year)),
+        ("1/01", date(day=1, month=1, year=now().year)),
+        ("1/12", date(day=1, month=12, year=now().year)),
+        ("1/12/1920", date(day=1, month=12, year=1920)),
     ],
 )
 def test_convert_to_date_given_valid_input(string, expected):
@@ -61,10 +61,10 @@ def test_convert_to_time_given_invalid_input(string):
 @pytest.mark.parametrize(
     "string,expected",
     [
-        ("a", ["a", ""]),
-        ("a b", ["a", "b"]),
-        ("   a    $   ", ["a", "$"]),
-        ("a 2       b", ["a", "2       b"]),
+        ("a", ("a", "")),
+        ("a b", ("a", "b")),
+        ("   a    $   ", ("a", "$")),
+        ("a 2       b", ("a", "2       b")),
     ],
 )
 def test_parse_query_given_valid_input(string, expected):
@@ -83,9 +83,9 @@ def test_parse_query_given_invalid_input(string):
         # fmt: off
         (
             [
-                {"name": "name",        "date": datetime(day=1, month=1, year=21)},
-                {"name": "name big",    "date": datetime(day=5, month=5, year=201)},
-                {"name": "name bigger", "date": datetime(day=7, month=7, year=2001)},
+                {"name": "name",        "date": date(day=1, month=1, year=21)},
+                {"name": "name big",    "date": date(day=5, month=5, year=201)},
+                {"name": "name bigger", "date": date(day=7, month=7, year=2001)},
             ],
             ["name", "date"],
             [
@@ -116,19 +116,19 @@ def test_parse_query_given_invalid_input(string):
             [
                 {
                     "name": "name",
-                    "date": datetime(day=1, month=1, year=21),
+                    "date": date(day=1, month=1, year=21),
                     "id": 1,
                     "time": time(hour=11, minute=11),
                 },
                 {
                     "name": "name big",
-                    "date": datetime(day=7, month=7, year=2001),
+                    "date": date(day=7, month=7, year=2001),
                     "id": 10,
                     "time": time(hour=22, minute=22),
                 },
                 {
                     "name": "name bigger",
-                    "date": datetime(day=5, month=5, year=201),
+                    "date": date(day=5, month=5, year=201),
                     "id": 100,
                     "time": time(hour=13, minute=13),
                 },
