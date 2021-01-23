@@ -68,14 +68,25 @@ class TestInsertCommand:
     @pytest.mark.parametrize(
         "args,expected",
         [
-            ("a", [{"name": "a"}]),
-            ("a, b  ", [{"name": "a"}, {"name": "b"}]),
-            ("  a  , b  ", [{"name": "a"}, {"name": "b"}]),
-            (" z,a  ", [{"name": "a"}, {"name": "z"}]),
+            ("a", lambda Food: Food.insert_many([{"name": "a"}])),
+            (
+                "a, b  ",
+                lambda Food: Food.insert_many([{"name": "a"}, {"name": "b"}]),
+            ),
+            (
+                "  a  , b  ",
+                lambda Food: Food.insert_many([{"name": "a"}, {"name": "b"}]),
+            ),
+            (
+                " z,a  ",
+                lambda Food: Food.insert_many([{"name": "a"}, {"name": "z"}]),
+            ),
         ],
     )
     def test_parse_args_given_valid_args(self, args, expected):
-        assert InsertCommand.parse_args(args) == expected
+        query = InsertCommand.parse_args(args)
+        expected_query = expected(self.Food)
+        assert query.sql() == expected_query.sql()
 
     def test_execute_given_valid_args(self):
         random_string = get_random_string(20)
@@ -173,43 +184,56 @@ class TestUpdateCommand:
         [
             (
                 "iD 1 n `foo` d 1/06 t 1:55",
-                {
-                    "id": 1,
-                    "name": "foo",
-                    "date": datetime(day=1, month=6, year=now().year),
-                    "time": time(hour=1, minute=55),
-                },
+                lambda Food: Food.replace(
+                    **{
+                        "id": 1,
+                        "name": "foo",
+                        "date": datetime(day=1, month=6, year=now().year),
+                        "time": time(hour=1, minute=55),
+                    }
+                ),
             ),
             (
                 "iD 1 D 01/6/55 naMe `foo` t 1:55",
-                {
-                    "id": 1,
-                    "name": "foo",
-                    "date": datetime(day=1, month=6, year=55),
-                    "time": time(hour=1, minute=55),
-                },
+                lambda Food: Food.replace(
+                    **{
+                        "id": 1,
+                        "name": "foo",
+                        "date": datetime(day=1, month=6, year=55),
+                        "time": time(hour=1, minute=55),
+                    },
+                ),
             ),
             (
                 "id 1 name `foo` d 12",
-                {
-                    "id": 1,
-                    "name": "foo",
-                    "date": datetime(day=12, month=now().month, year=now().year),
-                },
+                lambda Food: Food.replace(
+                    **{
+                        "id": 1,
+                        "name": "foo",
+                        "date": datetime(day=12, month=now().month, year=now().year),
+                    },
+                ),
             ),
             (
                 "id 1 name `foo` t 16h",
-                {
-                    "id": 1,
-                    "name": "foo",
-                    "time": time(hour=16, minute=0),
-                },
+                lambda Food: Food.replace(
+                    **{
+                        "id": 1,
+                        "name": "foo",
+                        "time": time(hour=16, minute=0),
+                    },
+                ),
             ),
-            ("id 1 name `foo`", {"id": 1, "name": "foo"}),
+            (
+                "id 1 name `foo`",
+                lambda Food: Food.replace(**{"id": 1, "name": "foo"}),
+            ),
         ],
     )
     def test_parse_args_given_valid_args(self, args, expected):
-        assert UpdateCommand.parse_args(args) == expected
+        query = UpdateCommand.parse_args(args)
+        expected_query = expected(self.Food)
+        assert query.sql() == expected_query.sql()
 
     @pytest.mark.parametrize(
         "args,error",

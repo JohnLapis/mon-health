@@ -62,15 +62,22 @@ class InsertCommand(Command):
 
     @staticmethod
     def parse_args(args):
-        return [
-            {"name": name} for name in sorted(re.split(r"\s*,\s*", args.strip()))
-        ]
+        return Food.insert_many(
+            [{"name": name} for name in sorted(re.split(r"\s*,\s*", args.strip()))]
+        )
 
     @staticmethod
     def execute(args):
         try:
-            Food.insert_many(InsertCommand.parse_args(args)).execute()
+            query = InsertCommand.parse_args(args)
+        except Exception as e:
+            return [e.args[0]]
+
+        try:
+            query.execute()
             return []
+        except IntegrityError:
+            return ["Invalid insert query."]
         except Exception as e:
             return [e.args[0]]
 
@@ -119,12 +126,12 @@ class UpdateCommand(Command):
         if parser.time:
             params["time"] = parser.time
 
-        return params
+        return Food.replace(**params)
 
     @staticmethod
     def execute(args):
         try:
-            params = UpdateCommand.parse_args(args)
+            query = UpdateCommand.parse_args(args)
         except IdFieldNotFound:
             return ["Id field should be given."]
         except NameFieldNotFound:
@@ -133,7 +140,7 @@ class UpdateCommand(Command):
             return [e.args[0]]
 
         try:
-            rows_modified = Food.replace(**params).execute()
+            rows_modified = query.execute()
         except IntegrityError:
             return ["Invalid update query."]
         except Exception as e:
