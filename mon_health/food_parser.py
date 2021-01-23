@@ -64,6 +64,11 @@ class FoodParser:
             "keyword_pattern": r"limit|l",
             "value_pattern": r"\d+",
         },
+        {
+            "name": "returning",
+            "keyword_pattern": r"returning|\|",
+            "value_pattern": r"\w+(,\w+)*",
+        },
     ]
     keyword_patterns = "|".join([e["keyword_pattern"] for e in exprs])
 
@@ -175,3 +180,15 @@ class FoodParser:
             self.limit_clause = limit
         except (ValueError, TypeError, AssertionError):
             raise InvalidLimit("Limit should be a positive integer.")
+
+    def parse_returning(self, string):
+        if re.match(string, "all", re.I):
+            self.returning_clause = []
+            return
+
+        try:
+            self.returning_clause = [
+                getattr(Food, name) for name in string.split(",")
+            ]
+        except AttributeError:
+            raise InvalidColumn

@@ -54,7 +54,7 @@ def compare_nested_exprs(expr1, expr2):
     "args,expected",
     [
         (
-            'N "name" datE 1/01 t 5h sort date,name l 1',
+            'N "name" datE 1/01 t 5h sort date,name l 1 returNinG name,time',
             {
                 "where_clause": (
                     (Food.name == "name")
@@ -66,11 +66,12 @@ def compare_nested_exprs(expr1, expr2):
                 ),
                 "sort_clause": [Food.date.asc(), Food.name.asc()],
                 "limit_clause": 1,
+                "returning_clause": [Food.name, Food.time],
             },
         ),
         # the following 4 cases shows order doesn't matter for where_clause
         (
-            "name `name` time 5:05 date 12/12",
+            "name `name` time 5:05 date 12/12 returning ALL",
             {
                 "where_clause": (
                     (Food.name == "name")
@@ -79,6 +80,7 @@ def compare_nested_exprs(expr1, expr2):
                 ),
                 "sort_clause": [],
                 "limit_clause": -1,
+                "returning_clause": [],
             },
         ),
         (
@@ -91,6 +93,7 @@ def compare_nested_exprs(expr1, expr2):
                 ),
                 "sort_clause": [],
                 "limit_clause": -1,
+                "returning_clause": [],
             },
         ),
         (
@@ -103,6 +106,7 @@ def compare_nested_exprs(expr1, expr2):
                 ),
                 "sort_clause": [],
                 "limit_clause": -1,
+                "returning_clause": [],
             },
         ),
         (
@@ -116,6 +120,7 @@ def compare_nested_exprs(expr1, expr2):
                 ),
                 "sort_clause": [],
                 "limit_clause": -1,
+                "returning_clause": [],
             },
         ),
         (
@@ -125,6 +130,7 @@ def compare_nested_exprs(expr1, expr2):
                 "where_clause": True,
                 "sort_clause": [Food.time.asc()],
                 "limit_clause": 5,
+                "returning_clause": [],
             },
         ),
         (
@@ -133,6 +139,7 @@ def compare_nested_exprs(expr1, expr2):
                 "where_clause": True,
                 "sort_clause": [],
                 "limit_clause": 5,
+                "returning_clause": [],
             },
         ),
         (
@@ -141,6 +148,16 @@ def compare_nested_exprs(expr1, expr2):
                 "where_clause": Food.date == now().date(),
                 "sort_clause": [],
                 "limit_clause": -1,
+                "returning_clause": [],
+            },
+        ),
+        (
+            "| time,name",
+            {
+                "where_clause": True,
+                "sort_clause": [],
+                "limit_clause": -1,
+                "returning_clause": [Food.time, Food.name],
             },
         ),
         (
@@ -149,6 +166,7 @@ def compare_nested_exprs(expr1, expr2):
                 "where_clause": True,
                 "sort_clause": [],
                 "limit_clause": -1,
+                "returning_clause": [],
             },
         ),
     ],
@@ -160,6 +178,7 @@ def test_parse_given_valid_args(args, expected):
     assert compare_nested_exprs(parser.where_clause, expected["where_clause"])
     assert parser.sort_clause == expected["sort_clause"]
     assert parser.limit_clause == expected["limit_clause"]
+    assert parser.returning_clause == expected["returning_clause"]
 
 
 @pytest.mark.parametrize(
@@ -330,3 +349,33 @@ def test_parse_limit_given_invalid_args(args):
     parser = FoodParser("")
     with pytest.raises(InvalidLimit):
         parser.parse_limit(args)
+
+
+@pytest.mark.parametrize(
+    "args,expected",
+    [
+        ("", []),
+        ("all", []),
+        ("name", [Food.name]),
+        ("name,time", [Food.name, Food.time]),
+    ],
+)
+def test_parse_returning_given_valid_args(args, expected):
+    parser = FoodParser("")
+    parser.parse_returning(args)
+    assert parser.returning_clause == expected
+
+
+@pytest.mark.parametrize(
+    "args",
+    [
+        "time,",  # ends with comma
+        "   time",
+        "time  ",
+        "zzzz",  # invalid Food field
+    ],
+)
+def test_parse_returning_given_invalid_args(args):
+    parser = FoodParser("")
+    with pytest.raises(InvalidColumn):
+        parser.parse_returning(args)
