@@ -133,8 +133,9 @@ class TestFindCommand:
                     .where(True)
                     .order_by(Food.date.asc(), Food.time.asc())
                     .limit(5)
-                    .dicts())
-             ),
+                    .dicts()
+                ),
+            ),
             (
                 "d 1/01 Time 5h    sort  date LImit 1 | name",
                 lambda Food: (
