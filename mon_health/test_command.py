@@ -9,7 +9,6 @@ from .command import (
     HelpCommand,
     IdFieldNotFound,
     InsertCommand,
-    InvalidId,
     NameFieldNotFound,
     UpdateCommand,
     setup_commands,
@@ -215,7 +214,6 @@ class TestUpdateCommand:
         [
             ("", IdFieldNotFound),
             ("name '55'", IdFieldNotFound),
-            ("Id foo 16:55", InvalidId),
             ("iD 1 daTe 11/11", NameFieldNotFound),
         ],
     )

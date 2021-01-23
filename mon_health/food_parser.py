@@ -1,5 +1,5 @@
 import re
-from datetime import datetime, time
+from datetime import datetime
 from functools import reduce
 
 from peewee import SQL, Expression, NodeList
@@ -17,6 +17,10 @@ class InvalidExpression(Exception):
 
 
 class InvalidValue(Exception):
+    pass
+
+
+class InvalidId(Exception):
     pass
 
 
@@ -41,6 +45,11 @@ class Match:
 
 class FoodParser:
     exprs = [
+        {
+            "name": "id",
+            "keyword_pattern": r"id",
+            "value_pattern": r"\d+",
+        },
         {
             "name": "name",
             "keyword_pattern": r"name|n",
@@ -77,6 +86,7 @@ class FoodParser:
     def __init__(self, _input):
         self.input = _input
         self.where_clause_exprs = []
+        self.id = None
         self.name = None
         self.date = None
         self.time = None
@@ -138,6 +148,16 @@ class FoodParser:
             return reduce(lambda a, b: a & b, self.where_clause_exprs)
         else:
             return True
+
+    def parse_id(self, string):
+        try:
+            assert int(string) >= 1
+            op, rhs = "=", int(string)
+        except (ValueError, TypeError, AssertionError):
+            raise InvalidId("Id should be a positive integer.")
+
+        self.id = rhs
+        self.where_clause_exprs.append(Expression(Food.id, op, rhs))
 
     def parse_name(self, string):
         if not re.match(r"([\"'`]).*\1", string):

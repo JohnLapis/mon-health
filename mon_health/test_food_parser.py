@@ -8,6 +8,7 @@ from .food_parser import (
     FoodParser,
     InvalidColumn,
     InvalidExpression,
+    InvalidId,
     InvalidLimit,
     InvalidName,
     InvalidValue,
@@ -54,10 +55,11 @@ def compare_nested_exprs(expr1, expr2):
     "args,expected",
     [
         (
-            'N "name" datE 1/01 t 5h sort date,name l 1 returNinG name,time',
+            'id 1 N "name" datE 1/01 t 5h sort date,name l 1 returNinG name,time',
             {
                 "where_clause": (
-                    (Food.name == "name")
+                    (Food.id == 1)
+                    & (Food.name == "name")
                     & (Food.date == datetime(day=1, month=1, year=now().year))
                     & Food.time.between(
                         time(hour=5, minute=0),
@@ -161,6 +163,15 @@ def compare_nested_exprs(expr1, expr2):
             },
         ),
         (
+            "iD 66",
+            {
+                "where_clause": Food.id == 66,
+                "sort_clause": [],
+                "limit_clause": -1,
+                "returning_clause": [],
+            },
+        ),
+        (
             "",
             {
                 "where_clause": True,
@@ -238,6 +249,27 @@ def test_search_keyword(string, expr_name, expected):
 @pytest.mark.skip
 def test_ends_with_keyword():
     pass
+
+
+@pytest.mark.parametrize(
+    "args,expected",
+    [
+        ("4", Food.id == 4),
+        ("44", Food.id == 44),
+    ],
+)
+def test_parse_id_given_valid_args(args, expected):
+    parser = FoodParser("")
+    parser.parse_id(args)
+    assert compare_nested_exprs(parser.where_clause, expected)
+    assert parser.id == expected.rhs
+
+
+@pytest.mark.parametrize("args", ["", "a", "-4", "0.5"])
+def test_parse_id_given_invalid_args(args):
+    parser = FoodParser("")
+    with pytest.raises(InvalidId):
+        parser.parse_id(args)
 
 
 @pytest.mark.parametrize(

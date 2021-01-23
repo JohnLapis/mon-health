@@ -14,10 +14,6 @@ class CommandNotFound(Exception):
     pass
 
 
-class InvalidId(Exception):
-    pass
-
-
 class NameFieldNotFound(Exception):
     pass
 
@@ -106,16 +102,13 @@ class UpdateCommand(Command):
 
     @staticmethod
     def parse_args(args):
-        if not re.match(r"id", args, re.I):
-            raise IdFieldNotFound
-        id_match = re.match(r"id\s+(\d+)\s+", args, re.I)
-        if not id_match:
-            raise InvalidId
-        params = {"id": int(id_match.group(1))}
-
-        parser = FoodParser(args[id_match.end() :])
+        parser = FoodParser(args)
         parser.parse()
+        params = {}
 
+        if not parser.id:
+            raise IdFieldNotFound
+        params["id"] = parser.id
         if not parser.name:
             raise NameFieldNotFound
         params["name"] = parser.name
@@ -130,8 +123,6 @@ class UpdateCommand(Command):
     def execute(args):
         try:
             params = UpdateCommand.parse_args(args)
-        except InvalidId:
-            return ["Id should be a positive integer."]
         except IdFieldNotFound:
             return ["Id field should be given."]
         except NameFieldNotFound:
