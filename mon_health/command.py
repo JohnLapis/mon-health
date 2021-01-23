@@ -1,15 +1,9 @@
 import re
 
+from peewee import IntegrityError
+
 from .food_parser import FoodParser
-from .utils import (
-    format_time,
-    parse_command,
-    convert_to_date,
-    convert_to_time,
-    InvalidCommand,
-    InvalidDate,
-    InvalidTime,
-)
+from .utils import InvalidCommand, format_rows, format_time, parse_command
 
 
 class AliasNotFound(Exception):
@@ -20,7 +14,15 @@ class CommandNotFound(Exception):
     pass
 
 
-class InvalidArgs(Exception):
+class InvalidId(Exception):
+    pass
+
+
+class NameFieldNotFound(Exception):
+    pass
+
+
+class IdFieldNotFound(Exception):
     pass
 
 
@@ -104,40 +106,49 @@ class UpdateCommand(Command):
 
     @staticmethod
     def parse_args(args):
-        def add_to_parsed_args(key, value):
-            if key in parsed_args:
-                raise InvalidArgs
-            else:
-                parsed_args[key] = value
+        if not re.match(r"id", args, re.I):
+            raise IdFieldNotFound
+        id_match = re.match(r"id\s+(\d+)\s+", args, re.I)
+        if not id_match:
+            raise InvalidId
+        params = {"id": int(id_match.group(1))}
 
-        try:
-            split_args = [arg.strip() for arg in args.split(",")]
-            parsed_args = {"id": split_args.pop(0)}
-            assert split_args
-            for arg in split_args:
-                if "/" in arg:
-                    add_to_parsed_args("date", parse_date(arg))
-                elif ":" in arg:
-                    add_to_parsed_args("time", parse_time(arg))
-                else:
-                    add_to_parsed_args("name", arg)
+        parser = FoodParser(args[id_match.end() :])
+        parser.parse()
 
-            return parsed_args
-        except (AssertionError, IndexError, InvalidDate, InvalidTime):
-            raise InvalidArgs
+        if not parser.name:
+            raise NameFieldNotFound
+        params["name"] = parser.name
+        if parser.date:
+            params["date"] = parser.date
+        if parser.time:
+            params["time"] = parser.time
+
+        return params
 
     @staticmethod
     def execute(args):
         try:
-            # print(args)
-            # Food.replace(id=args, time=parse_time("16:16")).execute()
-
             params = UpdateCommand.parse_args(args)
-            Food.replace(**params).execute()
-            return []
-        except IntegrityError:
+        except InvalidId:
+            return ["Id should be a positive integer."]
+        except IdFieldNotFound:
+            return ["Id field should be given."]
+        except NameFieldNotFound:
             return ["Name field should be given."]
-            # raise e
+        except Exception as e:
+            return [e.msg]
+
+        try:
+            rows_modified = Food.replace(**params).execute()
+        except IntegrityError:
+            return ["Invalid update query."]
+        except Exception as e:
+            return [e.msg]
+
+        if rows_modified == 1:
+            return [f"{rows_modified} row modified."]
+        return [f"{rows_modified} rows modified."]
 
 
 class DeleteCommand(Command):

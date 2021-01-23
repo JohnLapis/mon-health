@@ -1,5 +1,4 @@
 import random
-import re
 from datetime import datetime, time
 
 import pytest
@@ -8,8 +7,10 @@ from .command import (
     CommandNotFound,
     FindCommand,
     HelpCommand,
+    IdFieldNotFound,
     InsertCommand,
-    InvalidArgs,
+    InvalidId,
+    NameFieldNotFound,
     UpdateCommand,
     setup_commands,
 )
@@ -169,57 +170,56 @@ class TestUpdateCommand:
         "args,expected",
         [
             (
-                "1, name, 01/6/55, 1:55",
+                "iD 1 n `foo` d 1/06 t 1:55",
                 {
-                    "id": "1",
-                    "name": "name",
+                    "id": 1,
+                    "name": "foo",
+                    "date": datetime(day=1, month=6, year=now().year),
+                    "time": time(hour=1, minute=55),
+                },
+            ),
+            (
+                "iD 1 D 01/6/55 naMe `foo` t 1:55",
+                {
+                    "id": 1,
+                    "name": "foo",
                     "date": datetime(day=1, month=6, year=55),
                     "time": time(hour=1, minute=55),
                 },
             ),
             (
-                "1, 01/6/55, name, 1:55",
+                "id 1 name `foo` d 12",
                 {
-                    "id": "1",
-                    "name": "name",
-                    "date": datetime(day=1, month=6, year=55),
-                    "time": time(hour=1, minute=55),
+                    "id": 1,
+                    "name": "foo",
+                    "date": datetime(day=12, month=now().month, year=now().year),
                 },
             ),
             (
-                "1, name, 01/6/55",
+                "id 1 name `foo` t 16h",
                 {
-                    "id": "1",
-                    "name": "name",
-                    "date": datetime(day=1, month=6, year=55),
+                    "id": 1,
+                    "name": "foo",
+                    "time": time(hour=16, minute=0),
                 },
             ),
-            (
-                "1, name, 16:55",
-                {
-                    "id": "1",
-                    "name": "name",
-                    "time": time(hour=16, minute=55),
-                },
-            ),
-            ("1, name", {"id": "1", "name": "name"}),
+            ("id 1 name `foo`", {"id": 1, "name": "foo"}),
         ],
     )
     def test_parse_args_given_valid_args(self, args, expected):
         assert UpdateCommand.parse_args(args) == expected
 
     @pytest.mark.parametrize(
-        "args",
+        "args,error",
         [
-            "1" "1, name, name2",
-            "1, 16:55, 16:55",
-            "1, aa/bb",
-            "1, aa:bb",
-            "1, name, 01/6/55, 1:55, extra",
+            ("", IdFieldNotFound),
+            ("name '55'", IdFieldNotFound),
+            ("Id foo 16:55", InvalidId),
+            ("iD 1 daTe 11/11", NameFieldNotFound),
         ],
     )
-    def test_parse_args_given_invalid_args(self, args):
-        with pytest.raises(InvalidArgs):
+    def test_parse_args_given_invalid_args(self, args, error):
+        with pytest.raises(error):
             UpdateCommand.parse_args(args)
 
     def test_execute_args_given_valid_args(self):
@@ -230,6 +230,6 @@ class TestUpdateCommand:
         )
         new_name = "new_string"
 
-        UpdateCommand.execute(f"{inserted_id}, {new_name}")
+        UpdateCommand.execute(f"id {inserted_id} name '{new_name}'")
 
         assert self.Food.get_by_id(inserted_id).name == new_name
