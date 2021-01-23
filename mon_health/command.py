@@ -3,7 +3,7 @@ import re
 from peewee import IntegrityError
 
 from .food_parser import FoodParser
-from .utils import InvalidCommand, format_rows, parse_command
+from .utils import format_rows, parse_query
 
 
 class AliasNotFound(Exception):
@@ -225,23 +225,23 @@ def setup_commands(db, command_table=None, alias_table=None):
         ALIAS_TABLE = alias_table
 
 
+def parse_input(input):
+    command_name, args = parse_query(input)
+    try:
+        command = get_command(command_name)
+    except CommandNotFound:
+        input = get_alias(command_name) + " " + args
+        command_name, args = parse_query(input)
+        command = get_command(command_name)
+
+    return command, args
+
+
 def run_command(input):
     try:
-        name, args = parse_command(input)
-
-        try:
-            command = get_command(name)
-        except CommandNotFound:
-            input = get_alias(name)
-            name, alias_args = parse_command(input)
-            args = alias_args + args
-            command = get_command(name)
-    except CommandNotFound:
-        print(f"Command '{name}' does not exist.")
-    except AliasNotFound:
-        print(f"Alias '{name}' does not exist.")
-    except InvalidCommand:
-        print("Invalid command.")
+        command, args = parse_input(input)
+    except Exception as e:
+        print(e.args[0])
 
     for output in command.execute(args):
         print(output)
@@ -251,7 +251,7 @@ def get_command(name):
     try:
         return COMMAND_TABLE[name]
     except KeyError:
-        raise CommandNotFound
+        raise CommandNotFound(f"Command '{name}' does not exist.")
 
 
 def get_commands():
@@ -262,7 +262,7 @@ def get_alias(name):
     try:
         return ALIAS_TABLE[name]
     except KeyError:
-        raise AliasNotFound
+        raise AliasNotFound(f"Alias '{name}' does not exist.")
 
 
 def get_aliases():

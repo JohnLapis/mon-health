@@ -37,12 +37,11 @@ def convert_to_time(string):
         raise InvalidTime
 
 
-def parse_command(command):
-    match = re.match(r"\s*(?P<a>\S+)\s*(?P<args>.*)?", command)
+def parse_query(command):
+    match = re.match(r"\s*(?P<name>\S+)(\s+(?P<args>.*))?", command)
     if match is None:
-        raise InvalidCommand
-    name, args = match.groups()
-    return [name, "" if args is None else args.strip()]
+        raise InvalidCommand("Invalid command.")
+    return match.groupdict()["name"], match.groupdict("")["args"].strip()
 
 
 def format_time(value):

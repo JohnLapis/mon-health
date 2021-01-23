@@ -10,7 +10,7 @@ from .utils import (
     convert_to_time,
     format_rows,
     pad_row_values,
-    parse_command,
+    parse_query,
 )
 
 
@@ -67,14 +67,14 @@ def test_convert_to_time_given_invalid_input(string):
         ("a 2       b", ["a", "2       b"]),
     ],
 )
-def test_parse_command_given_valid_input(string, expected):
-    assert parse_command(string) == expected
+def test_parse_query_given_valid_input(string, expected):
+    assert parse_query(string) == expected
 
 
 @pytest.mark.parametrize("string", ["", " "])
-def test_parse_command_given_invalid_input(string):
+def test_parse_query_given_invalid_input(string):
     with pytest.raises(InvalidCommand):
-        parse_command(string)
+        parse_query(string)
 
 
 @pytest.mark.parametrize(
