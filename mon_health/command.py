@@ -84,14 +84,13 @@ class FindCommand(Command):
     def parse_args(args):
         parser = FoodParser(args)
         parser.parse()
-        query = Food.select()
-        if parser.where_clause:
-            query = query.where(parser.where_clause)
-        query = query.order_by(parser.sorting_clause or Food.date)
-        if parser.limit_clause:
-            query = query.limit(parser.limit_clause)
-
-        return query
+        return (
+            Food.select()
+            .where(parser.where_clause)
+            .order_by(*(parser.sort_clause or (Food.date.asc(), Food.time.asc())))
+            .limit(parser.limit_clause)
+            .dicts()
+        )
 
     @staticmethod
     def execute(args):
