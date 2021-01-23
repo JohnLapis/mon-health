@@ -163,7 +163,7 @@ class ExitCommand(Command):
     description = "Exits shell."
 
     @staticmethod
-    def execute(*args):
+    def execute(args):
         return []
 
 
