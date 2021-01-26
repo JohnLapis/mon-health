@@ -141,15 +141,13 @@ class UpdateCommand(Command):
             return [e.args[0]]
 
         try:
-            rows_modified = query.execute()
+            query.execute()
+            return ["1 row modified."]
         except IntegrityError:
             return ["Invalid update query."]
         except Exception as e:
             return [e.args[0]]
 
-        if rows_modified == 1:
-            return [f"{rows_modified} row modified."]
-        return [f"{rows_modified} rows modified."]
 
 
 class DeleteCommand(Command):
