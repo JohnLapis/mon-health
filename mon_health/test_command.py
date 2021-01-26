@@ -264,7 +264,7 @@ class TestUpdateCommand:
         with pytest.raises(error):
             UpdateCommand.parse_args(args)
 
-    def test_execute_args_given_valid_args(self):
+    def test_execute_given_valid_args(self):
         random_string = get_random_string(20)
         self.Food.insert(name=random_string).execute()
         inserted_id = (
@@ -312,7 +312,7 @@ class TestDeleteCommand:
         expected_query = expected(self.Food)
         assert query.sql() == expected_query.sql()
 
-    def test_execute_args_given_valid_args(self):
+    def test_execute_given_valid_args(self):
         random_string = get_random_string(20)
         self.Food.insert(name=random_string).execute()
         inserted_id = (
@@ -327,7 +327,7 @@ class TestDeleteCommand:
 
 class TestExitCommand:
     @pytest.mark.parametrize("args", ["", "a"])
-    def test_execute_args_given_valid_args(self, args):
+    def test_execute_given_valid_args(self, args):
         assert ExitCommand.execute(args) == []
 
 
