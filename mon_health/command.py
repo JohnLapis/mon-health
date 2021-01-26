@@ -149,7 +149,6 @@ class UpdateCommand(Command):
             return [e.args[0]]
 
 
-
 class DeleteCommand(Command):
     description = "Delete entry from database."
 
