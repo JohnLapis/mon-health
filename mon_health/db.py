@@ -1,8 +1,29 @@
+import os
 from datetime import datetime, time
+from pathlib import Path
 
 from peewee import CharField, DateField, Model, SqliteDatabase, TimeField
 
-db = SqliteDatabase("health.db")
+
+def get_app_dir():
+    try:
+        XDG_DATA_HOME = os.getenv("XDG_DATA_HOME")
+
+        if XDG_DATA_HOME:
+            DATA_DIR = Path(XDG_DATA_HOME)
+        else:
+            DATA_DIR = Path(os.getenv("HOME")) / ".local" / "share"
+
+        return DATA_DIR / "mon-health"
+    except TypeError:
+        raise Exception("'HOME' environment variable is not set.")
+
+
+APP_DIR = get_app_dir()
+if not APP_DIR.exists():
+    os.mkdir(APP_DIR)
+
+DB = SqliteDatabase(str(APP_DIR / "health.db"))
 
 
 def current_time():
@@ -16,7 +37,7 @@ def current_date():
 
 class BaseModel(Model):
     class Meta:
-        database = db
+        database = DB
 
 
 class Food(BaseModel):
@@ -25,5 +46,8 @@ class Food(BaseModel):
     date = DateField(default=current_date)
 
 
-def init_db():
-    db.create_tables([Food])
+tables = [Food]
+table_names = {t.__name__.lower() for t in tables}
+if not set(DB.get_tables()).issuperset(table_names):
+    print("onde tava breakpoint")
+    DB.create_tables(tables)
