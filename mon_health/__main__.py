@@ -1,13 +1,16 @@
-#!/usr/bin/env python3
-
 import click
 
-from mon_health import execute_query, setup
+from mon_health import db
+from mon_health.command import execute_query, setup_commands
+
+
+def setup():
+    setup_commands(db)
 
 
 @click.command()
 def main():
-    print("mon-health 0.0.1. Type 'help' for help.")
+    print("mon-health 1.0.0-alpha. Type 'help' for help.")
     setup()
     while True:
         try:
@@ -15,7 +18,7 @@ def main():
             for query in queries:
                 if query:
                     execute_query(query)
-                    print()
+                print()
         except KeyboardInterrupt:
             print()
             continue
