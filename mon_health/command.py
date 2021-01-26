@@ -2,8 +2,8 @@ import re
 
 from peewee import IntegrityError
 
-from .food_parser import FoodParser
-from .utils import format_rows
+from mon_health.food_parser import FoodParser
+from mon_health.utils import format_rows
 
 
 class AliasNotFound(Exception):

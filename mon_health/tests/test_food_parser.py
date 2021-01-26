@@ -3,7 +3,7 @@ from datetime import date, datetime, time
 import peewee
 import pytest
 
-from .food_parser import (
+from mon_health.food_parser import (
     Food,
     FoodParser,
     InvalidColumn,

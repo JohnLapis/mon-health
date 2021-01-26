@@ -2,7 +2,7 @@ from datetime import date, datetime, time
 
 import pytest
 
-from .utils import (
+from mon_health.utils import (
     InvalidDate,
     InvalidTime,
     convert_to_date,

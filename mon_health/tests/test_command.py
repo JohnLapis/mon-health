@@ -3,7 +3,7 @@ from datetime import datetime, time
 
 import pytest
 
-from .command import (
+from mon_health.command import (
     CommandNotFound,
     DeleteCommand,
     ExitCommand,
@@ -61,7 +61,7 @@ class TestHelpCommand:
 class TestInsertCommand:
     @classmethod
     def setup_class(cls):
-        from . import db
+        from mon_health import db
 
         setup_commands(db)
         cls.Food = db.Food
@@ -101,7 +101,7 @@ class TestInsertCommand:
 class TestFindCommand:
     @classmethod
     def setup_class(cls):
-        from . import db
+        from mon_health import db
 
         setup_commands(db)
         cls.Food = db.Food
@@ -191,7 +191,7 @@ class TestFindCommand:
 class TestUpdateCommand:
     @classmethod
     def setup_class(cls):
-        from . import db
+        from mon_health import db
 
         setup_commands(db)
         cls.Food = db.Food
@@ -280,7 +280,7 @@ class TestUpdateCommand:
 class TestDeleteCommand:
     @classmethod
     def setup_class(cls):
-        from . import db
+        from mon_health import db
 
         setup_commands(db)
         cls.Food = db.Food

@@ -4,8 +4,8 @@ from functools import reduce
 
 from peewee import SQL, Expression, NodeList
 
-from .db import Food
-from .utils import convert_to_date, convert_to_time
+from mon_health.db import Food
+from mon_health.utils import convert_to_date, convert_to_time
 
 
 class KeywordNotFound(Exception):
