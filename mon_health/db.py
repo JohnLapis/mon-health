@@ -46,8 +46,6 @@ class Food(BaseModel):
     date = DateField(default=current_date)
 
 
-tables = [Food]
-table_names = {t.__name__.lower() for t in tables}
-if not set(DB.get_tables()).issuperset(table_names):
-    print("onde tava breakpoint")
-    DB.create_tables(tables)
+tables = {table.__name__.lower(): table for table in [Food]}
+if not set(DB.get_tables()).issuperset(tables.keys()):
+    DB.create_tables(tables.values())
