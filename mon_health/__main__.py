@@ -1,11 +1,11 @@
 import click
 
-from mon_health import db
 from mon_health.command import execute_query, setup_commands
+from mon_health.db import tables
 
 
 def setup():
-    setup_commands(db)
+    setup_commands(tables)
 
 
 @click.command()

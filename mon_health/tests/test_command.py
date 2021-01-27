@@ -1,7 +1,9 @@
+import os
 import random
 from datetime import datetime, time
 
 import pytest
+from peewee import CharField, DateField, Model, SqliteDatabase, TimeField
 
 from mon_health.command import (
     CommandNotFound,
@@ -18,6 +20,27 @@ from mon_health.command import (
 )
 
 
+@pytest.fixture(scope="class")
+def Food():
+    TEST_DB_PATH = "test_command.db"
+    TEST_DB = SqliteDatabase(TEST_DB_PATH)
+
+    class BaseModel(Model):
+        class Meta:
+            database = TEST_DB
+
+    class Food(BaseModel):
+        name = CharField(max_length=20)
+        time = TimeField(default=lambda: time(hour=now().hour, minute=now().minute))
+        date = DateField(default=lambda: now().date())
+
+    tables = {table.__name__.lower(): table for table in [Food]}
+    TEST_DB.create_tables(tables.values())
+    setup_commands(tables)
+    yield Food
+    os.remove(TEST_DB_PATH)
+
+
 def get_random_string(length):
     letters = "abcdefghijklmnopqrstuvwxyz"
     return "".join(random.choice(letters) for i in range(length))
@@ -30,9 +53,6 @@ def now():
 class TestHelpCommand:
     @classmethod
     def setup_class(cls):
-        class FakeDb:
-            Food = None
-
         class TestCommand:
             description = "Test."
 
@@ -40,8 +60,8 @@ class TestHelpCommand:
             "test1": TestCommand,
             "test2": TestCommand,
         }
-
-        setup_commands(FakeDb(), COMMAND_TABLE)
+        db_tables = {"food": ""}
+        setup_commands(db_tables, COMMAND_TABLE)
 
     @pytest.mark.parametrize(
         "args,expected",
@@ -59,13 +79,6 @@ class TestHelpCommand:
 
 
 class TestInsertCommand:
-    @classmethod
-    def setup_class(cls):
-        from mon_health import db
-
-        setup_commands(db)
-        cls.Food = db.Food
-
     @pytest.mark.parametrize(
         "args,expected",
         [
@@ -84,28 +97,19 @@ class TestInsertCommand:
             ),
         ],
     )
-    def test_parse_args_given_valid_args(self, args, expected):
+    def test_parse_args_given_valid_args(self, args, expected, Food):
         query = InsertCommand.parse_args(args)
-        expected_query = expected(self.Food)
+        expected_query = expected(Food)
         assert query.sql() == expected_query.sql()
 
-    def test_execute_given_valid_args(self):
+    def test_execute_given_valid_args(self, Food):
         random_string = get_random_string(20)
         InsertCommand.execute(random_string)
-        inserted_id = (
-            self.Food.select().where(self.Food.name == random_string).get().id
-        )
-        assert self.Food.delete_by_id(inserted_id) == 1
+        inserted_id = Food.select().where(Food.name == random_string).get().id
+        assert Food.delete_by_id(inserted_id) == 1
 
 
 class TestFindCommand:
-    @classmethod
-    def setup_class(cls):
-        from mon_health import db
-
-        setup_commands(db)
-        cls.Food = db.Food
-
     @pytest.mark.parametrize(
         "args,expected",
         [
@@ -181,21 +185,14 @@ class TestFindCommand:
             ),
         ],
     )
-    def test_parse_args_given_valid_args(self, args, expected):
+    def test_parse_args_given_valid_args(self, args, expected, Food):
         query, columns = FindCommand.parse_args(args)
-        expected_query = expected[0](self.Food)
+        expected_query = expected[0](Food)
         assert query.sql() == expected_query.sql()
         assert columns == expected[1]
 
 
 class TestUpdateCommand:
-    @classmethod
-    def setup_class(cls):
-        from mon_health import db
-
-        setup_commands(db)
-        cls.Food = db.Food
-
     @pytest.mark.parametrize(
         "args,expected",
         [
@@ -247,9 +244,9 @@ class TestUpdateCommand:
             ),
         ],
     )
-    def test_parse_args_given_valid_args(self, args, expected):
+    def test_parse_args_given_valid_args(self, args, expected, Food):
         query = UpdateCommand.parse_args(args)
-        expected_query = expected(self.Food)
+        expected_query = expected(Food)
         assert query.sql() == expected_query.sql()
 
     @pytest.mark.parametrize(
@@ -264,27 +261,18 @@ class TestUpdateCommand:
         with pytest.raises(error):
             UpdateCommand.parse_args(args)
 
-    def test_execute_given_valid_args(self):
+    def test_execute_given_valid_args(self, Food):
         random_string = get_random_string(20)
-        self.Food.insert(name=random_string).execute()
-        inserted_id = (
-            self.Food.select().where(self.Food.name == random_string).get().id
-        )
+        Food.insert(name=random_string).execute()
+        inserted_id = Food.select().where(Food.name == random_string).get().id
         new_name = "new_string"
 
         UpdateCommand.execute(f"id {inserted_id} name '{new_name}'")
 
-        assert self.Food.get_by_id(inserted_id).name == new_name
+        assert Food.get_by_id(inserted_id).name == new_name
 
 
 class TestDeleteCommand:
-    @classmethod
-    def setup_class(cls):
-        from mon_health import db
-
-        setup_commands(db)
-        cls.Food = db.Food
-
     @pytest.mark.parametrize(
         "args,expected",
         [
@@ -307,21 +295,19 @@ class TestDeleteCommand:
             ),
         ],
     )
-    def test_parse_args_given_valid_args(self, args, expected):
+    def test_parse_args_given_valid_args(self, args, expected, Food):
         query = DeleteCommand.parse_args(args)
-        expected_query = expected(self.Food)
+        expected_query = expected(Food)
         assert query.sql() == expected_query.sql()
 
-    def test_execute_given_valid_args(self):
+    def test_execute_given_valid_args(self, Food):
         random_string = get_random_string(20)
-        self.Food.insert(name=random_string).execute()
-        inserted_id = (
-            self.Food.select().where(self.Food.name == random_string).get().id
-        )
+        Food.insert(name=random_string).execute()
+        inserted_id = Food.select().where(Food.name == random_string).get().id
 
         DeleteCommand.execute(f"name '{random_string}'")
 
-        query = self.Food.select().where(self.Food.id == inserted_id).execute()
+        query = Food.select().where(Food.id == inserted_id).execute()
         assert list(query) == []
 
 

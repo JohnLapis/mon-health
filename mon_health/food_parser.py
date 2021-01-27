@@ -4,7 +4,6 @@ from functools import reduce
 
 from peewee import SQL, Expression, NodeList
 
-from mon_health.db import Food
 from mon_health.utils import convert_to_date, convert_to_time
 
 
@@ -83,8 +82,8 @@ class FoodParser:
     ]
     keyword_patterns = "|".join([e["keyword_pattern"] for e in exprs])
 
-    def __init__(self, _input):
-        self.input = _input
+    def __init__(self, food_table):
+        self.Food = food_table
         self.where_clause_exprs = []
         self.id = None
         self.name = None
@@ -106,7 +105,8 @@ class FoodParser:
         self.input = (self.input[:expr_start] + " " + self.input[expr_end:]).strip()
         self.get_parser(name)(value_match.matched)
 
-    def parse(self):
+    def parse(self, input):
+        self.input = input
         for expr in self.exprs:
             try:
                 self.parse_expr(**expr)
@@ -158,7 +158,7 @@ class FoodParser:
             raise InvalidId("Id should be a positive integer.")
 
         self.id = rhs
-        self.where_clause_exprs.append(Expression(Food.id, op, rhs))
+        self.where_clause_exprs.append(Expression(self.Food.id, op, rhs))
 
     def parse_name(self, string):
         if not re.match(r"([\"'`]).*\1", string):
@@ -168,7 +168,7 @@ class FoodParser:
 
         op, rhs = "=", string[1:-1]
         self.name = rhs
-        self.where_clause_exprs.append(Expression(Food.name, op, rhs))
+        self.where_clause_exprs.append(Expression(self.Food.name, op, rhs))
 
     def parse_date(self, string):
         if re.match(string, "today", re.I):
@@ -177,7 +177,7 @@ class FoodParser:
             op, rhs = "=", convert_to_date(string)
 
         self.date = rhs
-        self.where_clause_exprs.append(Expression(Food.date, op, rhs))
+        self.where_clause_exprs.append(Expression(self.Food.date, op, rhs))
 
     def parse_time(self, string):
         if string.endswith("h"):
@@ -190,7 +190,7 @@ class FoodParser:
             op, rhs = "=", convert_to_time(string)
             self.time = rhs
 
-        self.where_clause_exprs.append(Expression(Food.time, op, rhs))
+        self.where_clause_exprs.append(Expression(self.Food.time, op, rhs))
 
     def parse_sort(self, string):
         columns = []
@@ -198,10 +198,10 @@ class FoodParser:
             try:
                 if name.startswith("-"):
                     column = name[1:]
-                    columns.append(getattr(Food, column).desc())
+                    columns.append(getattr(self.Food, column).desc())
                 else:
                     column = name
-                    columns.append(getattr(Food, column).asc())
+                    columns.append(getattr(self.Food, column).asc())
             except AttributeError:
                 raise InvalidColumn(f"Column '{column}' doesn't exist.")
 
@@ -223,7 +223,7 @@ class FoodParser:
         columns = []
         for column in string.split(","):
             try:
-                columns.append(getattr(Food, column))
+                columns.append(getattr(self.Food, column))
             except AttributeError:
                 raise InvalidColumn(f"Column '{column}' doesn't exist.")
 

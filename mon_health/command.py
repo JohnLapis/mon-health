@@ -87,8 +87,8 @@ class FindCommand(Command):
 
     @staticmethod
     def parse_args(args):
-        parser = FoodParser(args)
-        parser.parse()
+        parser = FoodParser(Food)
+        parser.parse(args)
         query = (
             Food.select(*parser.returning_clause)
             .where(parser.where_clause)
@@ -112,8 +112,8 @@ class UpdateCommand(Command):
 
     @staticmethod
     def parse_args(args):
-        parser = FoodParser(args)
-        parser.parse()
+        parser = FoodParser(Food)
+        parser.parse(args)
         params = {}
 
         if not parser.id:
@@ -154,8 +154,8 @@ class DeleteCommand(Command):
 
     @staticmethod
     def parse_args(args):
-        parser = FoodParser(args)
-        parser.parse()
+        parser = FoodParser(Food)
+        parser.parse(args)
         return Food.delete().where(parser.where_clause)
 
     @staticmethod
@@ -187,10 +187,10 @@ class ExitCommand(Command):
         return []
 
 
-def setup_commands(db, command_table=None, alias_table=None):
+def setup_commands(tables, command_table=None, alias_table=None):
     global Food, COMMAND_TABLE, ALIAS_TABLE
 
-    Food = db.Food
+    Food = tables["food"]
 
     if command_table is None:
         COMMAND_TABLE = {
