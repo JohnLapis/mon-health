@@ -188,9 +188,8 @@ class ExitCommand(Command):
 
 
 def setup_commands(db, command_table=None, alias_table=None):
-    global DB, Food, COMMAND_TABLE, ALIAS_TABLE
+    global Food, COMMAND_TABLE, ALIAS_TABLE
 
-    DB = db
     Food = db.Food
 
     if command_table is None:
