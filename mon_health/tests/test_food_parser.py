@@ -227,6 +227,77 @@ class TestFoodParser:
         assert parser.returning_clause == expected["returning_clause"]
 
     @pytest.mark.parametrize(
+        "arg_list,expected_attrs",
+        [
+            (
+                [
+                    'id 1 N "name1" datE 1/01 t 5h sort date,name returNinG name,time',
+                    'id 3 N "name2" t 6:05 sort -date l 2 returNinG All',
+                ],
+                [
+                    {
+                        "where_clause": (
+                            (Food.id == 1)
+                            & (Food.name == "name1")
+                            & (Food.date == date(day=1, month=1, year=now().year))
+                            & Food.time.between(
+                                time(hour=5, minute=0),
+                                time(hour=5, minute=59),
+                            )
+                        ),
+                        "sort_clause": [Food.date.asc(), Food.name.asc()],
+                        "limit_clause": -1,
+                        "returning_clause": [Food.name, Food.time],
+                        "id": 1,
+                        "name": "name1",
+                        "date": date(day=1, month=1, year=now().year),
+                        "time": time(hour=5, minute=0),
+                        "columns": ["name", "time"],
+                    },
+                    {
+                        "where_clause": (
+                            (Food.id == 1)
+                            & (Food.name == "name1")
+                            & (Food.date == date(day=1, month=1, year=now().year))
+                            & Food.time.between(
+                                time(hour=5, minute=0),
+                                time(hour=5, minute=59),
+                            )
+                            & (Food.id == 3)
+                            & (Food.name == "name2")
+                            & (Food.time == time(hour=6, minute=5))
+                        ),  # altered
+                        "sort_clause": [Food.date.desc()],  # altered
+                        "limit_clause": 2,  # altered
+                        "returning_clause": [],  # altered
+                        "id": 3,  # altered
+                        "name": "name2",  # altered
+                        "date": date(day=1, month=1, year=now().year),
+                        "time": time(hour=6, minute=5),  # altered
+                        "columns": [],  # altered
+                    },
+                ],
+            ),
+        ],
+    )
+    def test_parse_given_reset_false(self, arg_list, expected_attrs):
+        assert len(arg_list) == len(expected_attrs)
+        parser = FoodParser(Food)
+        for args, expected in zip(arg_list, expected_attrs):
+            parser.parse(args, reset=False)
+            assert compare_nested_exprs(
+                parser.where_clause, expected["where_clause"]
+            )
+            assert parser.sort_clause == expected["sort_clause"]
+            assert parser.limit_clause == expected["limit_clause"]
+            assert parser.returning_clause == expected["returning_clause"]
+            assert parser.id == expected["id"]
+            assert parser.name == expected["name"]
+            assert parser.date == expected["date"]
+            assert parser.time == expected["time"]
+            assert parser.columns == expected["columns"]
+
+    @pytest.mark.parametrize(
         "args,error,invalid_value",
         # fmt: off
         [
@@ -281,6 +352,29 @@ class TestFoodParser:
     @pytest.mark.skip
     def test_ends_with_keyword(self):
         pass
+
+    def test_reset_attributes(self):
+        parser = FoodParser(Food)
+        parser.where_clause_exprs = ["foo"]
+        parser.id = 1
+        parser.name = "name"
+        parser.date = "date"
+        parser.time = "time"
+        parser.sort_clause = ["foo"]
+        parser.limit_clause = 999
+        parser.columns = ["foo"]
+        parser.returning_clause = ["foo"]
+
+        parser.reset_attributes()
+
+        assert parser.id is None
+        assert parser.name is None
+        assert parser.date is None
+        assert parser.time is None
+        assert parser.sort_clause == []
+        assert parser.limit_clause == -1
+        assert parser.columns == []
+        assert parser.returning_clause == []
 
     @pytest.mark.parametrize(
         "args,expected",

@@ -105,8 +105,10 @@ class FoodParser:
         self.input = (self.input[:expr_start] + " " + self.input[expr_end:]).strip()
         self.get_parser(name)(value_match.matched)
 
-    def parse(self, input):
+    def parse(self, input, reset=True):
         self.input = input
+        if reset:
+            self.reset_attributes()
         for expr in self.exprs:
             try:
                 self.parse_expr(**expr)
@@ -142,6 +144,17 @@ class FoodParser:
 
     def get_parser(self, name):
         return getattr(self, f"parse_{name}")
+
+    def reset_attributes(self):
+        self.where_clause_exprs = []
+        self.id = None
+        self.name = None
+        self.date = None
+        self.time = None
+        self.sort_clause = []
+        self.limit_clause = -1
+        self.columns = []
+        self.returning_clause = []
 
     @property
     def where_clause(self):
@@ -218,6 +231,7 @@ class FoodParser:
     def parse_returning(self, string):
         if re.match(string, "all", re.I):
             self.returning_clause = []
+            self.columns = []
             return
 
         columns = []
