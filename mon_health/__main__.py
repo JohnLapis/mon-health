@@ -18,7 +18,6 @@ def main():
             for query in queries:
                 if query:
                     execute_query(query)
-                print()
         except KeyboardInterrupt:
             print()
             continue
