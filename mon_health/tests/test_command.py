@@ -70,10 +70,10 @@ class TestHelpCommand:
             ("test1", ["test1               Test."]),
         ],
     )
-    def test_given_valid_args(self, args, expected):
+    def test_execute_given_valid_args(self, args, expected):
         assert HelpCommand.execute(args) == expected
 
-    def test_given_invalid_args(self):
+    def test_execute_given_invalid_args(self):
         with pytest.raises(CommandNotFound):
             HelpCommand.execute("nonexistent command")
 
