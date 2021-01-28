@@ -265,7 +265,6 @@ def parse_input(input):
 def execute_query(input):
     try:
         command, args = parse_input(input)
-        for output in command.execute(args):
-            print(output)
+        return "\n".join(command.execute(args))
     except Exception as e:
-        print(e.args[0])
+        return str(e.args[0])
