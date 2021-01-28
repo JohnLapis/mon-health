@@ -10,7 +10,7 @@ def setup():
 
 @click.command()
 def main():
-    print("mon-health 1.0.0-alpha. Type 'help' for help.")
+    print("mon-health 1.0.0-alpha.6. Type 'help' for help.")
     setup()
     while True:
         try:
